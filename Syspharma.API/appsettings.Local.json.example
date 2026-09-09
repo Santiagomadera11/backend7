@@ -1,0 +1,13 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=syspharma;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "reemplaza-con-una-clave-larga-y-secreta"
+  },
+  "EmailSettings": {
+    "User": "tu-correo@gmail.com",
+    "Password": "tu-contraseña-de-aplicacion-de-gmail",
+    "From": "tu-correo@gmail.com"
+  }
+}
