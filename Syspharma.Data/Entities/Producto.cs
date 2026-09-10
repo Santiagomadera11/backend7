@@ -19,9 +19,9 @@ public partial class Producto
 
     public decimal? PrecioCompra { get; set; }
 
-    public string? Marca { get; set; }
+    public int? MarcaId { get; set; }
 
-    public string? Presentacion { get; set; }
+    public int? PresentacionId { get; set; }
 
     public int Stock { get; set; }
 
@@ -41,6 +41,10 @@ public partial class Producto
 
     public virtual Categoria Categoria { get; set; } = null!;
 
+    public virtual Marca? Marca { get; set; }
+
+    public virtual Presentacion? Presentacion { get; set; }
+
     public virtual ICollection<CompraDetalle> CompraDetalles { get; set; } = new List<CompraDetalle>();
 
     public virtual ICollection<PedidoDetalle> PedidoDetalles { get; set; } = new List<PedidoDetalle>();
@@ -53,4 +57,6 @@ public partial class Producto
     public virtual ProductoMedicamento? ProductoMedicamento { get; set; }
 
     public virtual ICollection<Lote> Lotes { get; set; } = new List<Lote>();
+
+    public virtual ICollection<ProductoFormaVenta> FormasVenta { get; set; } = new List<ProductoFormaVenta>();
 }

@@ -14,6 +14,9 @@ namespace Syspharma.Domain.DTOs
         public decimal Subtotal { get; set; }
         public decimal PorcentajeIva { get; set; }
         public decimal Iva { get; set; }
+        public int? FormaVentaId { get; set; }
+        public string? FormaVentaTipo { get; set; }
+        public int FactorUnidades { get; set; } = 1;
     }
 
     public class PedidoDto
@@ -58,6 +61,8 @@ namespace Syspharma.Domain.DTOs
         [Required(ErrorMessage = "El precio unitario es obligatorio.")]
         [Range(0.0, double.MaxValue, ErrorMessage = "El precio unitario no puede ser negativo.")]
         public decimal PrecioUnitario { get; set; }
+
+        public int? FormaVentaId { get; set; }
     }
 
     public class PedidoCreateDto

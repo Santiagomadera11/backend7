@@ -8,7 +8,7 @@ namespace Syspharma.Data.Repositories
 
     public interface ICitaRepository
     {
-        Task<List<CitaDto>> ObtenerTodos();
+        Task<List<CitaDto>> ObtenerTodos(DateTime? desde = null);
         Task<CitaDto?> ObtenerPorId(int id);
         Task<CitaDto> Crear(CitaCreateDto dto);
         Task<CitaDto> Actualizar(CitaUpdateDto dto);
@@ -47,12 +47,19 @@ namespace Syspharma.Data.Repositories
             FechaCreacion = c.FechaCreacion
         };
 
-        public async Task<List<CitaDto>> ObtenerTodos()
+        // "desde" filtra en SQL (para el feed de notificaciones, que solo necesita
+        // las citas creadas después del último visto en vez de traer la tabla entera).
+        public async Task<List<CitaDto>> ObtenerTodos(DateTime? desde = null)
         {
-            var citas = await _context.Citas
+            var query = _context.Citas
                 .Include(c => c.Medico).Include(c => c.Estado)
                 .Include(c => c.Servicio).Include(c => c.Usuario)
-                .OrderByDescending(c => c.Fecha).ToListAsync();
+                .AsQueryable();
+
+            if (desde.HasValue)
+                query = query.Where(c => c.FechaCreacion > desde.Value);
+
+            var citas = await query.OrderByDescending(c => c.Fecha).ToListAsync();
             return citas.Select(MapDto).ToList();
         }
 

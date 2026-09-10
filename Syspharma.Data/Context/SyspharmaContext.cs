@@ -14,6 +14,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
     {
     }
 
+    public virtual DbSet<Carrito> Carritos { get; set; }
+    public virtual DbSet<CarritoItem> CarritoItems { get; set; }
     public virtual DbSet<Categoria> Categorias { get; set; }
     public virtual DbSet<CategoriaServicio> CategoriaServicios { get; set; }
     public virtual DbSet<Cita> Citas { get; set; }
@@ -30,12 +32,16 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
     public virtual DbSet<Medico> Medicos { get; set; }
     public virtual DbSet<MedicoHorario> MedicoHorarios { get; set; }
     public virtual DbSet<MedicoDiaNoDisponible> MedicoDiasNoDisponibles { get; set; }
+    public virtual DbSet<Notificacion> Notificaciones { get; set; }
+    public virtual DbSet<Marca> Marcas { get; set; }
+    public virtual DbSet<Presentacion> Presentaciones { get; set; }
     public virtual DbSet<MetodosPago> MetodosPagos { get; set; }
     public virtual DbSet<Pedido> Pedidos { get; set; }
     public virtual DbSet<PedidoDetalle> PedidoDetalles { get; set; }
     public virtual DbSet<Permiso> Permisos { get; set; }
     public virtual DbSet<Producto> Productos { get; set; }
     public virtual DbSet<ProductoMedicamento> ProductoMedicamentos { get; set; }
+    public virtual DbSet<ProductoFormaVenta> ProductoFormasVenta { get; set; }
     public virtual DbSet<Proveedore> Proveedores { get; set; }
     public virtual new DbSet<Role> Roles { get; set; }
     public virtual DbSet<RolesPermiso> RolesPermisos { get; set; }
@@ -64,6 +70,47 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Carrito>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("carritos");
+            entity.HasIndex(e => e.UsuarioId).IsUnique();
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuarioId");
+            entity.Property(e => e.FechaActualizacion).HasColumnType("datetime").HasColumnName("fechaActualizacion");
+            entity.HasOne(d => d.Usuario).WithMany().HasForeignKey(d => d.UsuarioId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_Carritos_Usuarios");
+        });
+
+        modelBuilder.Entity<CarritoItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("carrito_items");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CarritoId).HasColumnName("carritoId");
+            entity.Property(e => e.ProductoId).HasColumnName("productoId");
+            entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+            entity.Property(e => e.PrecioUnitario).HasColumnType("decimal(12, 2)").HasColumnName("precioUnitario");
+            entity.Property(e => e.FormaVentaId).HasColumnName("formaVentaId");
+            entity.HasOne(d => d.Carrito).WithMany(p => p.Items).HasForeignKey(d => d.CarritoId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_CarritoItems_Carritos");
+            entity.HasOne(d => d.Producto).WithMany().HasForeignKey(d => d.ProductoId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CarritoItems_Productos");
+        });
+
+        modelBuilder.Entity<Notificacion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("notificaciones");
+            entity.HasIndex(e => new { e.UsuarioId, e.FechaCreacion });
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuarioId");
+            entity.Property(e => e.Tipo).HasMaxLength(30).HasColumnName("tipo");
+            entity.Property(e => e.Titulo).HasMaxLength(150).HasColumnName("titulo");
+            entity.Property(e => e.Mensaje).HasColumnName("mensaje");
+            entity.Property(e => e.Path).HasMaxLength(200).HasColumnName("path");
+            entity.Property(e => e.Leida).HasColumnName("leida");
+            entity.Property(e => e.FechaCreacion).HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.HasOne(d => d.Usuario).WithMany().HasForeignKey(d => d.UsuarioId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_Notificaciones_Usuarios");
+        });
 
         modelBuilder.Entity<Categoria>(entity =>
         {
@@ -338,8 +385,12 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.PrecioUnitario).HasColumnType("decimal(12, 2)").HasColumnName("precioUnitario");
             entity.Property(e => e.ProductoId).HasColumnName("productoId");
             entity.Property(e => e.Subtotal).HasColumnType("decimal(12, 2)").HasColumnName("subtotal");
+            entity.Property(e => e.FormaVentaId).HasColumnName("formaVentaId");
+            entity.Property(e => e.FormaVentaTipo).HasMaxLength(20).HasColumnName("formaVentaTipo");
+            entity.Property(e => e.FactorUnidades).HasDefaultValue(1).HasColumnName("factorUnidades");
             entity.HasOne(d => d.Pedido).WithMany(p => p.PedidoDetalles).HasForeignKey(d => d.PedidoId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_PedidoDetalles_Pedidos");
             entity.HasOne(d => d.Producto).WithMany(p => p.PedidoDetalles).HasForeignKey(d => d.ProductoId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("FK_PedidoDetalles_Productos");
+            entity.HasOne(d => d.FormaVenta).WithMany().HasForeignKey(d => d.FormaVentaId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_PedidoDetalles_ProductoFormaVenta");
         });
 
         // ✅ CONFIGURACIÓN DE GASTO (LIMPIA)
@@ -393,8 +444,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Nombre).HasMaxLength(200).HasColumnName("nombre");
             entity.Property(e => e.Precio).HasColumnType("decimal(12, 2)").HasColumnName("precio");
             entity.Property(e => e.PrecioCompra).HasColumnType("decimal(12, 2)").HasColumnName("precioCompra");
-            entity.Property(e => e.Marca).HasMaxLength(100).HasColumnName("marca");
-            entity.Property(e => e.Presentacion).HasMaxLength(150).HasColumnName("presentacion");
+            entity.Property(e => e.MarcaId).HasColumnName("marcaId");
+            entity.Property(e => e.PresentacionId).HasColumnName("presentacionId");
             entity.Property(e => e.ProveedorId).HasColumnName("proveedorId");
             entity.Property(e => e.Stock).HasColumnName("stock");
             entity.Property(e => e.UltimaActualizacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("ultimaActualizacion");
@@ -402,6 +453,32 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.PorcentajeIva).HasColumnType("decimal(5, 2)").HasDefaultValue(0.00m).HasColumnName("porcentajeIva");
             entity.HasOne(d => d.Categoria).WithMany(p => p.Productos).HasForeignKey(d => d.CategoriaId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Productos_Categorias");
             entity.HasOne(d => d.Proveedor).WithMany(p => p.Productos).HasForeignKey(d => d.ProveedorId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("FK_Productos_Proveedores");
+            entity.HasOne(d => d.Marca).WithMany(p => p.Productos).HasForeignKey(d => d.MarcaId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("FK_Productos_Marca");
+            entity.HasOne(d => d.Presentacion).WithMany(p => p.Productos).HasForeignKey(d => d.PresentacionId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("FK_Productos_Presentacion");
+        });
+
+        modelBuilder.Entity<Marca>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("marcas");
+            entity.HasIndex(e => e.Nombre).IsUnique();
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nombre).HasMaxLength(100).HasColumnName("nombre");
+            entity.Property(e => e.Descripcion).HasMaxLength(500).HasColumnName("descripcion");
+            entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+        });
+
+        modelBuilder.Entity<Presentacion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("presentaciones");
+            entity.HasIndex(e => e.Nombre).IsUnique();
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nombre).HasMaxLength(100).HasColumnName("nombre");
+            entity.Property(e => e.Descripcion).HasMaxLength(500).HasColumnName("descripcion");
+            entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
         });
 
         modelBuilder.Entity<Proveedore>(entity =>
@@ -544,6 +621,20 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.TotalVentas).HasColumnType("decimal(38, 2)").HasColumnName("totalVentas");
         });
 
+        modelBuilder.Entity<VVentaDetalle>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.ToTable("VVentaDetalles");
+            entity.Property(e => e.Cantidad).HasColumnName("Cantidad");
+            entity.Property(e => e.Descuento).HasColumnType("decimal(18, 2)").HasColumnName("Descuento");
+            entity.Property(e => e.PrecioUnitario).HasColumnType("decimal(18, 2)").HasColumnName("PrecioUnitario");
+            entity.Property(e => e.ProductoId).HasColumnName("ProductoId");
+            entity.Property(e => e.ProductoNombre).HasColumnName("ProductoNombre");
+            entity.Property(e => e.Subtotal).HasColumnType("decimal(18, 2)").HasColumnName("Subtotal");
+            entity.Property(e => e.SubtotalCalculado).HasColumnType("decimal(18, 2)").HasColumnName("SubtotalCalculado");
+            entity.Property(e => e.VentaId).HasColumnName("VentaId");
+        });
+
         modelBuilder.Entity<Venta>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__ventas__3213E83F3E2DA856");
@@ -587,9 +678,13 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Subtotal).HasColumnType("decimal(12, 2)").HasColumnName("subtotal");
             entity.Property(e => e.VentaId).HasColumnName("ventaId");
             entity.Property(e => e.LoteId).HasColumnName("loteId");
+            entity.Property(e => e.FormaVentaId).HasColumnName("formaVentaId");
+            entity.Property(e => e.FormaVentaTipo).HasMaxLength(20).HasColumnName("formaVentaTipo");
+            entity.Property(e => e.FactorUnidades).HasDefaultValue(1).HasColumnName("factorUnidades");
             entity.HasOne(d => d.Producto).WithMany(p => p.VentaDetalles).HasForeignKey(d => d.ProductoId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_VentaDetalles_Productos");
             entity.HasOne(d => d.Venta).WithMany(p => p.VentaDetalles).HasForeignKey(d => d.VentaId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_VentaDetalles_Ventas");
             entity.HasOne(d => d.Lote).WithMany().HasForeignKey(d => d.LoteId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("FK_VentaDetalles_Lotes");
+            entity.HasOne(d => d.FormaVenta).WithMany().HasForeignKey(d => d.FormaVentaId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_VentaDetalles_ProductoFormaVenta");
         });
 
         modelBuilder.Entity<VentaDetalleServicio>(entity =>
@@ -641,11 +736,51 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
                 .HasColumnName("requiereFormula")
                 .HasColumnType("bit");
 
+            entity.Property(e => e.Indicaciones).HasColumnName("indicaciones");
+            entity.Property(e => e.Posologia).HasColumnName("posologia");
+            entity.Property(e => e.UnidadesPorEnvase).HasColumnName("unidadesPorEnvase");
+
+            entity.Property(e => e.RequiereRefrigeracion)
+                .HasColumnName("requiereRefrigeracion")
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.AfectaConduccion)
+                .HasColumnName("afectaConduccion")
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.Fotosensible)
+                .HasColumnName("fotosensible")
+                .HasColumnType("bit")
+                .HasDefaultValue(false);
+
             entity.HasOne(d => d.Producto)
                 .WithOne(p => p.ProductoMedicamento)
                 .HasForeignKey<ProductoMedicamento>(d => d.ProductoId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_ProductoMedicamento_Productos");
+        });
+
+        modelBuilder.Entity<ProductoFormaVenta>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_producto_forma_venta");
+            entity.ToTable("producto_forma_venta");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ProductoId).HasColumnName("productoId");
+            entity.Property(e => e.Tipo).HasMaxLength(20).HasColumnName("tipo");
+            entity.Property(e => e.Precio).HasColumnType("decimal(12, 2)").HasColumnName("precio");
+            entity.Property(e => e.FactorUnidades).HasColumnName("factorUnidades");
+            entity.Property(e => e.Activo).HasColumnType("bit").HasDefaultValue(true).HasColumnName("activo");
+
+            entity.HasIndex(e => new { e.ProductoId, e.Tipo }).IsUnique().HasDatabaseName("UQ_producto_forma_venta_producto_tipo");
+
+            entity.HasOne(d => d.Producto)
+                .WithMany(p => p.FormasVenta)
+                .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_ProductoFormaVenta_Productos");
         });
 
         modelBuilder.Entity<Lote>(entity =>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Syspharma.Data.Context;
 
@@ -11,9 +12,11 @@ using Syspharma.Data.Context;
 namespace Syspharma.Data.Migrations
 {
     [DbContext(typeof(SyspharmaContext))]
-    partial class SyspharmaContextModelSnapshot : ModelSnapshot
+    [Migration("20260910131009_AgregarCarritoYNotificaciones")]
+    partial class AgregarCarritoYNotificaciones
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,10 +199,6 @@ namespace Syspharma.Data.Migrations
                     b.Property<int>("CarritoId")
                         .HasColumnType("int")
                         .HasColumnName("carritoId");
-
-                    b.Property<int?>("FormaVentaId")
-                        .HasColumnType("int")
-                        .HasColumnName("formaVentaId");
 
                     b.Property<decimal>("PrecioUnitario")
                         .HasColumnType("decimal(12, 2)")
@@ -1394,21 +1393,6 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("cantidad");
 
-                    b.Property<int>("FactorUnidades")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("factorUnidades");
-
-                    b.Property<int?>("FormaVentaId")
-                        .HasColumnType("int")
-                        .HasColumnName("formaVentaId");
-
-                    b.Property<string>("FormaVentaTipo")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("formaVentaTipo");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1433,8 +1417,6 @@ namespace Syspharma.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK__pedido_d__3213E83F48F2B407");
-
-                    b.HasIndex("FormaVentaId");
 
                     b.HasIndex("PedidoId");
 
@@ -1611,49 +1593,6 @@ namespace Syspharma.Data.Migrations
                     b.HasIndex(new[] { "Nombre" }, "idx_productos_nombre");
 
                     b.ToTable("productos", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.ProductoFormaVenta", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("activo");
-
-                    b.Property<int>("FactorUnidades")
-                        .HasColumnType("int")
-                        .HasColumnName("factorUnidades");
-
-                    b.Property<decimal>("Precio")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("precio");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int")
-                        .HasColumnName("productoId");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("tipo");
-
-                    b.HasKey("Id")
-                        .HasName("PK_producto_forma_venta");
-
-                    b.HasIndex("ProductoId", "Tipo")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_producto_forma_venta_producto_tipo");
-
-                    b.ToTable("producto_forma_venta", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.ProductoMedicamento", b =>
@@ -2408,21 +2347,6 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("descuento");
 
-                    b.Property<int>("FactorUnidades")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("factorUnidades");
-
-                    b.Property<int?>("FormaVentaId")
-                        .HasColumnType("int")
-                        .HasColumnName("formaVentaId");
-
-                    b.Property<string>("FormaVentaTipo")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("formaVentaTipo");
-
                     b.Property<int?>("LoteId")
                         .HasColumnType("int")
                         .HasColumnName("loteId");
@@ -2445,8 +2369,6 @@ namespace Syspharma.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK__venta_de__3213E83FD3C3548D");
-
-                    b.HasIndex("FormaVentaId");
 
                     b.HasIndex("LoteId");
 
@@ -2866,12 +2788,6 @@ namespace Syspharma.Data.Migrations
 
             modelBuilder.Entity("Syspharma.Data.Entities.PedidoDetalle", b =>
                 {
-                    b.HasOne("Syspharma.Data.Entities.ProductoFormaVenta", "FormaVenta")
-                        .WithMany()
-                        .HasForeignKey("FormaVentaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_PedidoDetalles_ProductoFormaVenta");
-
                     b.HasOne("Syspharma.Data.Entities.Pedido", "Pedido")
                         .WithMany("PedidoDetalles")
                         .HasForeignKey("PedidoId")
@@ -2883,8 +2799,6 @@ namespace Syspharma.Data.Migrations
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("FK_PedidoDetalles_Productos");
-
-                    b.Navigation("FormaVenta");
 
                     b.Navigation("Pedido");
 
@@ -2924,18 +2838,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Presentacion");
 
                     b.Navigation("Proveedor");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.ProductoFormaVenta", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Producto", "Producto")
-                        .WithMany("FormasVenta")
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_ProductoFormaVenta_Productos");
-
-                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.ProductoMedicamento", b =>
@@ -3072,12 +2974,6 @@ namespace Syspharma.Data.Migrations
 
             modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalle", b =>
                 {
-                    b.HasOne("Syspharma.Data.Entities.ProductoFormaVenta", "FormaVenta")
-                        .WithMany()
-                        .HasForeignKey("FormaVentaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_VentaDetalles_ProductoFormaVenta");
-
                     b.HasOne("Syspharma.Data.Entities.Lote", "Lote")
                         .WithMany()
                         .HasForeignKey("LoteId")
@@ -3095,8 +2991,6 @@ namespace Syspharma.Data.Migrations
                         .HasForeignKey("VentaId")
                         .IsRequired()
                         .HasConstraintName("FK_VentaDetalles_Ventas");
-
-                    b.Navigation("FormaVenta");
 
                     b.Navigation("Lote");
 
@@ -3226,8 +3120,6 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Syspharma.Data.Entities.Producto", b =>
                 {
                     b.Navigation("CompraDetalles");
-
-                    b.Navigation("FormasVenta");
 
                     b.Navigation("Lotes");
 

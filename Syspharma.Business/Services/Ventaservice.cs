@@ -107,21 +107,13 @@ namespace Syspharma.Business.Services
                 await _context.SaveChangesAsync(); // necesitamos el Id de la venta
 
                 // 7. Copiar los detalles de PedidoDetalle → VentaDetalle
+                // NOTA: el stock del pedido YA se descontó en Pedidorepository.Crear al
+                // generar el pedido. Este método solo genera los registros contables
+                // Venta/VentaDetalle y NO debe volver a tocar Producto.Stock (bug fix:
+                // antes se descontaba dos veces). Se propagan FormaVentaId/Tipo/FactorUnidades
+                // tal cual quedaron congelados en el PedidoDetalle de origen, sin resolver de nuevo.
                 foreach (var detalle in detallesValidos)
                 {
-                    // Validar stock
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId!.Value);
-                    if (producto != null)
-                    {
-                        if (producto.Stock < detalle.Cantidad)
-                            throw new Exception(
-                                $"Stock insuficiente para '{producto.Nombre}'. " +
-                                $"Disponible: {producto.Stock}, requerido: {detalle.Cantidad}.");
-
-                        producto.Stock -= detalle.Cantidad;
-                        producto.UltimaActualizacion = DateTime.Now;
-                    }
-
                     _context.VentaDetalles.Add(new VentaDetalle
                     {
                         VentaId = venta.Id,
@@ -129,7 +121,10 @@ namespace Syspharma.Business.Services
                         Cantidad = detalle.Cantidad,
                         PrecioUnitario = detalle.PrecioUnitario,
                         Descuento = 0,
-                        Subtotal = detalle.Subtotal
+                        Subtotal = detalle.Subtotal,
+                        FormaVentaId = detalle.FormaVentaId,
+                        FormaVentaTipo = detalle.FormaVentaTipo,
+                        FactorUnidades = detalle.FactorUnidades
                     });
                 }
 
@@ -249,6 +244,22 @@ namespace Syspharma.Business.Services
                         if (d.Descuento < 0 || d.Descuento > d.Cantidad * d.PrecioUnitario)
                             throw new Exception("El descuento no puede ser negativo ni mayor al subtotal del producto.");
 
+                        // Resolver la forma de venta (Unidad/Blister/Caja) para calcular el
+                        // factor de conversión real a unidades. FormaVentaId es opcional
+                        // (compatibilidad con llamadas que no lo mandan): en ese caso factor = 1.
+                        Syspharma.Data.Entities.ProductoFormaVenta? formaVenta = null;
+                        int factor = 1;
+                        if (d.FormaVentaId.HasValue)
+                        {
+                            formaVenta = await _context.ProductoFormasVenta
+                                .FirstOrDefaultAsync(f => f.Id == d.FormaVentaId.Value && f.ProductoId == d.ProductoId);
+                            if (formaVenta == null || !formaVenta.Activo)
+                                throw new Exception($"La forma de venta seleccionada para el producto no existe o fue deshabilitada.");
+                            factor = formaVenta.FactorUnidades;
+                        }
+
+                        var unidadesADescontar = d.Cantidad * factor;
+
                         _context.VentaDetalles.Add(new VentaDetalle
                         {
                             VentaId = venta.Id,
@@ -257,15 +268,18 @@ namespace Syspharma.Business.Services
                             PrecioUnitario = d.PrecioUnitario,
                             Descuento = d.Descuento,
                             Subtotal = (d.Cantidad * d.PrecioUnitario) - d.Descuento,
-                            LoteId = d.LoteId
+                            LoteId = d.LoteId,
+                            FormaVentaId = formaVenta?.Id,
+                            FormaVentaTipo = formaVenta?.Tipo,
+                            FactorUnidades = factor
                         });
 
                         var producto = await _context.Productos.FindAsync(d.ProductoId);
                         if (producto != null)
                         {
-                            if (producto.Stock < d.Cantidad)
-                                throw new Exception($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.Stock}, solicitado: {d.Cantidad}.");
-                            producto.Stock -= d.Cantidad;
+                            if (producto.Stock < unidadesADescontar)
+                                throw new Exception($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.Stock}, solicitado: {unidadesADescontar}.");
+                            producto.Stock -= unidadesADescontar;
                             producto.UltimaActualizacion = DateTime.Now;
                         }
 
@@ -274,9 +288,9 @@ namespace Syspharma.Business.Services
                             var lote = await _context.Lotes.FindAsync(d.LoteId.Value);
                             if (lote != null)
                             {
-                                if (lote.Cantidad < d.Cantidad)
-                                    throw new Exception($"Stock insuficiente en el lote '{lote.NumeroLote}' para '{producto?.Nombre ?? "Producto"}'. Disponible: {lote.Cantidad}, solicitado: {d.Cantidad}.");
-                                lote.Cantidad -= d.Cantidad;
+                                if (lote.Cantidad < unidadesADescontar)
+                                    throw new Exception($"Stock insuficiente en el lote '{lote.NumeroLote}' para '{producto?.Nombre ?? "Producto"}'. Disponible: {lote.Cantidad}, solicitado: {unidadesADescontar}.");
+                                lote.Cantidad -= unidadesADescontar;
                             }
                         }
                     }
@@ -379,13 +393,15 @@ namespace Syspharma.Business.Services
                 // 1. Cambiar estado a anulada (3)
                 venta.EstadoId = 3;
 
-                // 2. Devolver stock de cada producto
+                // 2. Devolver stock de cada producto. Se usa el FactorUnidades YA CONGELADO
+                // en la fila VentaDetalle histórica (no se recalcula buscando la forma de
+                // venta actual, que puede haber cambiado o estar deshabilitada).
                 foreach (var detalle in venta.VentaDetalles)
                 {
                     var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                     if (producto != null)
                     {
-                        producto.Stock += detalle.Cantidad;
+                        producto.Stock += detalle.Cantidad * detalle.FactorUnidades;
                         producto.UltimaActualizacion = DateTime.Now;
                     }
                 }

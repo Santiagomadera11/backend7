@@ -7,7 +7,7 @@ namespace Syspharma.Business.Services
 {
     public interface IPedidoService
     {
-        Task<List<PedidoDto>> ObtenerTodos();
+        Task<List<PedidoDto>> ObtenerTodos(DateTime? desde = null);
         Task<PedidoDto?> ObtenerPorId(int id);
         Task<PedidoDto> Crear(PedidoCreateDto dto);
         Task<PedidoDto> Actualizar(PedidoUpdateDto dto);
@@ -36,9 +36,9 @@ namespace Syspharma.Business.Services
             _context = context;
         }
 
-        public async Task<List<PedidoDto>> ObtenerTodos()
+        public async Task<List<PedidoDto>> ObtenerTodos(DateTime? desde = null)
         {
-            try { return await _repo.ObtenerTodos(); }
+            try { return await _repo.ObtenerTodos(desde); }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error crítico en PedidoService: {ex.Message}");
