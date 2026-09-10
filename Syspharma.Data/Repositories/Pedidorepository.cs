@@ -181,6 +181,22 @@ namespace Syspharma.Data.Repositories
                     if (d.PrecioUnitario < 0)
                         throw new Exception($"El precio unitario para el producto '{d.Nombre}' no puede ser negativo.");
 
+                    // Resolver la forma de venta (Unidad/Blister/Caja) para calcular el
+                    // factor de conversión real a unidades. FormaVentaId es opcional
+                    // (compatibilidad): en ese caso factor = 1.
+                    ProductoFormaVenta? formaVenta = null;
+                    int factor = 1;
+                    if (d.FormaVentaId.HasValue && d.ProductoId.HasValue)
+                    {
+                        formaVenta = await _context.ProductoFormasVenta
+                            .FirstOrDefaultAsync(f => f.Id == d.FormaVentaId.Value && f.ProductoId == d.ProductoId.Value);
+                        if (formaVenta == null || !formaVenta.Activo)
+                            throw new Exception($"La forma de venta seleccionada para '{d.Nombre}' no existe o fue deshabilitada.");
+                        factor = formaVenta.FactorUnidades;
+                    }
+
+                    var unidadesADescontar = d.Cantidad * factor;
+
                     _context.PedidoDetalles.Add(new PedidoDetalle
                     {
                         PedidoId = pedido.Id,
@@ -188,15 +204,18 @@ namespace Syspharma.Data.Repositories
                         Nombre = d.Nombre,
                         Cantidad = d.Cantidad,
                         PrecioUnitario = d.PrecioUnitario,
-                        Subtotal = d.Cantidad * d.PrecioUnitario
+                        Subtotal = d.Cantidad * d.PrecioUnitario,
+                        FormaVentaId = formaVenta?.Id,
+                        FormaVentaTipo = formaVenta?.Tipo,
+                        FactorUnidades = factor
                     });
 
                     var producto = await _context.Productos.FindAsync(d.ProductoId);
                     if (producto != null)
                     {
-                        if (producto.Stock < d.Cantidad)
-                            throw new Exception($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.Stock}, solicitado: {d.Cantidad}.");
-                        producto.Stock -= d.Cantidad;
+                        if (producto.Stock < unidadesADescontar)
+                            throw new Exception($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.Stock}, solicitado: {unidadesADescontar}.");
+                        producto.Stock -= unidadesADescontar;
                         _context.Entry(producto).State = EntityState.Modified;
                     }
                 }
@@ -244,6 +263,11 @@ namespace Syspharma.Data.Repositories
             var estado = await _context.EstadosPedidos.FindAsync(estadoId);
             if (estado != null && estado.Nombre == "Entregado")
             {
+                // NOTA: este bloque es código vestigial. Pedidoservice.CambiarEstado ya
+                // invoca IVentaService.CrearDesdePedido ANTES de llamar a este método, así
+                // que para cuando se llega acá la venta ya existe y existeVenta siempre es
+                // true (el guard hace que este bloque no se ejecute). Se deja intacto tal
+                // cual para no alterar comportamiento fuera del alcance de esta tarea.
                 var existeVenta = await _context.Ventas.AnyAsync(v => v.PedidoId == id);
                 if (!existeVenta)
                 {

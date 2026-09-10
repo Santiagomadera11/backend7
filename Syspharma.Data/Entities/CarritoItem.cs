@@ -12,6 +12,8 @@ public partial class CarritoItem
 
     public decimal PrecioUnitario { get; set; }
 
+    public int? FormaVentaId { get; set; }
+
     public virtual Carrito Carrito { get; set; } = null!;
 
     public virtual Producto Producto { get; set; } = null!;

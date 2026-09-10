@@ -41,6 +41,9 @@ namespace Syspharma.Domain.DTOs
         public decimal Descuento { get; set; }
         public decimal Subtotal { get; set; }
         public int? LoteId { get; set; }
+        public int? FormaVentaId { get; set; }
+        public string? FormaVentaTipo { get; set; }
+        public int FactorUnidades { get; set; } = 1;
     }
 
     public class VentaDetalleServicioDto
@@ -126,6 +129,8 @@ namespace Syspharma.Domain.DTOs
         public decimal Subtotal { get; set; }
 
         public int? LoteId { get; set; }
+
+        public int? FormaVentaId { get; set; }
     }
 
     public class VentaDetalleServicioCreateDto

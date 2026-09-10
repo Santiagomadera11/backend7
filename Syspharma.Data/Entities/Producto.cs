@@ -57,4 +57,6 @@ public partial class Producto
     public virtual ProductoMedicamento? ProductoMedicamento { get; set; }
 
     public virtual ICollection<Lote> Lotes { get; set; } = new List<Lote>();
+
+    public virtual ICollection<ProductoFormaVenta> FormasVenta { get; set; } = new List<ProductoFormaVenta>();
 }

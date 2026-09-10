@@ -81,8 +81,78 @@ namespace Syspharma.Data.Repositories
                     Cantidad = l.Cantidad,
                     FechaVencimiento = l.FechaVencimiento,
                     CostoUnitario = l.CostoUnitario
+                }).ToList() ?? new(),
+                FormasVenta = p.FormasVenta?.Where(f => f.Activo).Select(f => new ProductoFormaVentaDto
+                {
+                    Id = f.Id,
+                    Tipo = f.Tipo,
+                    Precio = f.Precio,
+                    FactorUnidades = f.FactorUnidades,
+                    Activo = f.Activo
                 }).ToList() ?? new()
             };
+        }
+
+        // Garantiza que exista SIEMPRE una forma "Unidad" con Precio = producto.Precio y
+        // FactorUnidades = 1 (el precio del producto es la fuente de verdad para Unidad,
+        // nunca un valor independiente enviado por el frontend). Valida Blister/Caja.
+        private static List<ProductoFormaVentaDto> NormalizarFormasVenta(List<ProductoFormaVentaDto>? formas, decimal precioProducto)
+        {
+            var normalizadas = new List<ProductoFormaVentaDto>();
+            var tiposVistos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (formas != null)
+            {
+                foreach (var f in formas)
+                {
+                    if (string.IsNullOrWhiteSpace(f.Tipo)) continue;
+                    var tipo = f.Tipo.Trim();
+
+                    if (!tiposVistos.Add(tipo))
+                        throw new Exception($"La forma de venta '{tipo}' está duplicada.");
+
+                    if (tipo.Equals("Unidad", StringComparison.OrdinalIgnoreCase))
+                    {
+                        normalizadas.Add(new ProductoFormaVentaDto
+                        {
+                            Id = f.Id,
+                            Tipo = "Unidad",
+                            Precio = precioProducto,
+                            FactorUnidades = 1,
+                            Activo = true
+                        });
+                    }
+                    else
+                    {
+                        if (f.FactorUnidades < 1)
+                            throw new Exception($"El factor de unidades para '{tipo}' debe ser mayor o igual a 1.");
+                        if (f.Precio <= 0)
+                            throw new Exception($"El precio para '{tipo}' debe ser mayor a 0.");
+
+                        normalizadas.Add(new ProductoFormaVentaDto
+                        {
+                            Id = f.Id,
+                            Tipo = tipo,
+                            Precio = f.Precio,
+                            FactorUnidades = f.FactorUnidades,
+                            Activo = true
+                        });
+                    }
+                }
+            }
+
+            if (!tiposVistos.Contains("Unidad"))
+            {
+                normalizadas.Add(new ProductoFormaVentaDto
+                {
+                    Tipo = "Unidad",
+                    Precio = precioProducto,
+                    FactorUnidades = 1,
+                    Activo = true
+                });
+            }
+
+            return normalizadas;
         }
 
         public async Task<List<ProductoDto>> ObtenerTodos()
@@ -94,6 +164,7 @@ namespace Syspharma.Data.Repositories
                 .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
                 .Include(p => p.Lotes)
+                .Include(p => p.FormasVenta)
                 .ToListAsync();
 
             return productos.Select(MapToDto).ToList();
@@ -108,6 +179,7 @@ namespace Syspharma.Data.Repositories
                 .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
                 .Include(p => p.Lotes)
+                .Include(p => p.FormasVenta)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             return p == null ? null : MapToDto(p);
@@ -120,6 +192,7 @@ namespace Syspharma.Data.Repositories
                 .Include(p => p.Marca)
                 .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
+                .Include(p => p.FormasVenta)
                 .Where(p => p.Estado == true)
                 .ToListAsync();
 
@@ -140,6 +213,14 @@ namespace Syspharma.Data.Repositories
                 RegistroSanitario = p.ProductoMedicamento?.RegistroSanitario ?? "",
                 RequiereFormula = p.ProductoMedicamento?.RequiereFormula ?? false,
                 Estado = p.Estado,
+                FormasVenta = p.FormasVenta?.Where(f => f.Activo).Select(f => new ProductoFormaVentaDto
+                {
+                    Id = f.Id,
+                    Tipo = f.Tipo,
+                    Precio = f.Precio,
+                    FactorUnidades = f.FactorUnidades,
+                    Activo = f.Activo
+                }).ToList() ?? new()
             }).ToList();
         }
 
@@ -153,6 +234,7 @@ namespace Syspharma.Data.Repositories
                 .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
                 .Include(p => p.Lotes)
+                .Include(p => p.FormasVenta)
                 .Where(p => p.Estado == true)
                 .ToListAsync();
 
@@ -215,6 +297,21 @@ namespace Syspharma.Data.Repositories
                 _context.ProductoMedicamentos.Add(medicamento);
                 await _context.SaveChangesAsync();
             }
+
+            // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
+            var formasNormalizadas = NormalizarFormasVenta(dto.FormasVenta, producto.Precio);
+            foreach (var f in formasNormalizadas)
+            {
+                _context.ProductoFormasVenta.Add(new ProductoFormaVenta
+                {
+                    ProductoId = producto.Id,
+                    Tipo = f.Tipo,
+                    Precio = f.Precio,
+                    FactorUnidades = f.FactorUnidades,
+                    Activo = true
+                });
+            }
+            await _context.SaveChangesAsync();
 
             return await ObtenerPorId(producto.Id) ?? MapToDto(producto);
         }
@@ -297,6 +394,49 @@ namespace Syspharma.Data.Repositories
                 _context.ProductoMedicamentos.Remove(medicamentoExistente);
                 await _context.SaveChangesAsync();
             }
+
+            // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
+            // Actualiza in-place las que coinciden por Tipo (nunca borra el Id, referenciado
+            // por ventas/pedidos históricos). Las que ya no vienen en el DTO se desactivan
+            // (soft-delete): nunca se hace Remove() de una fila producto_forma_venta.
+            var formasNormalizadas = NormalizarFormasVenta(dto.FormasVenta, producto.Precio);
+            var formasExistentes = await _context.ProductoFormasVenta
+                .Where(f => f.ProductoId == producto.Id)
+                .ToListAsync();
+
+            var tiposEnviados = new HashSet<string>(formasNormalizadas.Select(f => f.Tipo), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var f in formasNormalizadas)
+            {
+                var existente = formasExistentes.FirstOrDefault(e => e.Tipo.Equals(f.Tipo, StringComparison.OrdinalIgnoreCase));
+                if (existente != null)
+                {
+                    existente.Precio = f.Precio;
+                    existente.FactorUnidades = f.FactorUnidades;
+                    existente.Activo = true;
+                }
+                else
+                {
+                    _context.ProductoFormasVenta.Add(new ProductoFormaVenta
+                    {
+                        ProductoId = producto.Id,
+                        Tipo = f.Tipo,
+                        Precio = f.Precio,
+                        FactorUnidades = f.FactorUnidades,
+                        Activo = true
+                    });
+                }
+            }
+
+            foreach (var existente in formasExistentes)
+            {
+                if (!tiposEnviados.Contains(existente.Tipo))
+                {
+                    existente.Activo = false; // soft-delete: nunca Remove()
+                }
+            }
+
+            await _context.SaveChangesAsync();
 
             return await ObtenerPorId(producto.Id) ?? MapToDto(producto);
         }

@@ -21,9 +21,17 @@ public partial class VentaDetalle
 
     public int? LoteId { get; set; }
 
+    public int? FormaVentaId { get; set; }
+
+    public string? FormaVentaTipo { get; set; }
+
+    public int FactorUnidades { get; set; } = 1;
+
     public virtual Lote? Lote { get; set; }
 
     public virtual Producto Producto { get; set; } = null!;
 
     public virtual Venta Venta { get; set; } = null!;
+
+    public virtual ProductoFormaVenta? FormaVenta { get; set; }
 }

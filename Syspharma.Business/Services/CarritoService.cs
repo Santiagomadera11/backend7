@@ -9,7 +9,7 @@ namespace Syspharma.Business.Services
     {
         Task<List<CarritoItemDto>> ObtenerPorUsuario(int usuarioId);
         Task<List<CarritoItemDto>> UpsertItem(int usuarioId, CarritoItemUpsertDto dto);
-        Task<List<CarritoItemDto>> EliminarItem(int usuarioId, int productoId);
+        Task<List<CarritoItemDto>> EliminarItem(int usuarioId, int productoId, int? formaVentaId);
         Task VaciarCarrito(int usuarioId);
     }
 
@@ -20,7 +20,7 @@ namespace Syspharma.Business.Services
 
         public Task<List<CarritoItemDto>> ObtenerPorUsuario(int usuarioId) => _repository.ObtenerPorUsuario(usuarioId);
         public Task<List<CarritoItemDto>> UpsertItem(int usuarioId, CarritoItemUpsertDto dto) => _repository.UpsertItem(usuarioId, dto);
-        public Task<List<CarritoItemDto>> EliminarItem(int usuarioId, int productoId) => _repository.EliminarItem(usuarioId, productoId);
+        public Task<List<CarritoItemDto>> EliminarItem(int usuarioId, int productoId, int? formaVentaId) => _repository.EliminarItem(usuarioId, productoId, formaVentaId);
         public Task VaciarCarrito(int usuarioId) => _repository.VaciarCarrito(usuarioId);
     }
 }

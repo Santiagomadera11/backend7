@@ -11,6 +11,9 @@ namespace Syspharma.Domain.DTOs
         public string? Imagen { get; set; }
         public int Cantidad { get; set; }
         public int Stock { get; set; }
+        public int? FormaVentaId { get; set; }
+        public string? FormaVentaTipo { get; set; }
+        public int FactorUnidades { get; set; } = 1;
     }
 
     public class CarritoItemUpsertDto
@@ -20,5 +23,7 @@ namespace Syspharma.Domain.DTOs
 
         [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a 0.")]
         public int Cantidad { get; set; }
+
+        public int? FormaVentaId { get; set; }
     }
 }

@@ -30,6 +30,9 @@ namespace Syspharma.Domain.DTOs
         // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public ProductoMedicamentoDto? Medicamento { get; set; }
         public List<LoteDto> Lotes { get; set; } = new();
+
+        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
     public class ProductoCreateDto
@@ -75,6 +78,9 @@ namespace Syspharma.Domain.DTOs
         // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public bool EsMedicamento { get; set; } = false;
         public ProductoMedicamentoDto? Medicamento { get; set; }
+
+        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
     public class ProductoUpdateDto
@@ -123,6 +129,9 @@ namespace Syspharma.Domain.DTOs
         // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public bool EsMedicamento { get; set; } = false;
         public ProductoMedicamentoDto? Medicamento { get; set; }
+
+        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
     // Subconjunto seguro de ProductoDto para el catálogo público (sin costos ni datos de proveedor).
@@ -143,6 +152,18 @@ namespace Syspharma.Domain.DTOs
         public string? RegistroSanitario { get; set; }
         public bool RequiereFormula { get; set; }
         public bool Estado { get; set; }
+
+        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
+    }
+
+    public class ProductoFormaVentaDto
+    {
+        public int? Id { get; set; }
+        public string Tipo { get; set; } = null!;
+        public decimal Precio { get; set; }
+        public int FactorUnidades { get; set; }
+        public bool Activo { get; set; } = true;
     }
 
     public class LoteDto

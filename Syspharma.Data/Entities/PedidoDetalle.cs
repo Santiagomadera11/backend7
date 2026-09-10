@@ -19,7 +19,15 @@ public partial class PedidoDetalle
 
     public decimal Subtotal { get; set; }
 
+    public int? FormaVentaId { get; set; }
+
+    public string? FormaVentaTipo { get; set; }
+
+    public int FactorUnidades { get; set; } = 1;
+
     public virtual Pedido Pedido { get; set; } = null!;
 
     public virtual Producto? Producto { get; set; }
+
+    public virtual ProductoFormaVenta? FormaVenta { get; set; }
 }

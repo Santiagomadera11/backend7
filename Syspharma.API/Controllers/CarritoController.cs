@@ -38,9 +38,9 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{usuarioId}/items/{productoId}")]
-        public async Task<IActionResult> EliminarItem(int usuarioId, int productoId)
+        public async Task<IActionResult> EliminarItem(int usuarioId, int productoId, [FromQuery] int? formaVentaId)
         {
-            var result = await _service.EliminarItem(usuarioId, productoId);
+            var result = await _service.EliminarItem(usuarioId, productoId, formaVentaId);
             return Ok(result);
         }
 
