@@ -11,7 +11,7 @@ namespace Syspharma.Data.Repositories
 {
     public interface IPedidoRepository
     {
-        Task<List<PedidoDto>> ObtenerTodos();
+        Task<List<PedidoDto>> ObtenerTodos(DateTime? desde = null);
         Task<PedidoDto?> ObtenerPorId(int id);
         Task<List<PedidoDto>> ObtenerPorUsuario(int usuarioId);
         Task<PedidoDto> Crear(PedidoCreateDto dto);
@@ -77,11 +77,18 @@ namespace Syspharma.Data.Repositories
 
         private string GenerarNumeroPedido() => $"PED-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
-        public async Task<List<PedidoDto>> ObtenerTodos()
+        // "desde" filtra en SQL (para el feed de notificaciones, que solo necesita
+        // los pedidos posteriores al último visto en vez de traer la tabla entera).
+        public async Task<List<PedidoDto>> ObtenerTodos(DateTime? desde = null)
         {
-            var pedidos = await _context.Pedidos
+            var query = _context.Pedidos
                 .Include(p => p.Usuario).Include(p => p.MetodoPago).Include(p => p.Estado).Include(p => p.PedidoDetalles).ThenInclude(d => d.Producto)
-                .OrderByDescending(p => p.FechaCreacion).ToListAsync();
+                .AsQueryable();
+
+            if (desde.HasValue)
+                query = query.Where(p => p.FechaCreacion > desde.Value);
+
+            var pedidos = await query.OrderByDescending(p => p.FechaCreacion).ToListAsync();
             return pedidos.Select(MapDto).ToList();
         }
 

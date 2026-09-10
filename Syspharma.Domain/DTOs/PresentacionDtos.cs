@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Syspharma.Domain.DTOs
 {
-    public class CategoriaDto
+    public class PresentacionDto
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = null!;
@@ -12,9 +12,9 @@ namespace Syspharma.Domain.DTOs
         public int ProductosCount { get; set; }
     }
 
-    public class CategoriaCreateDto
+    public class PresentacionCreateDto
     {
-        [Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]
+        [Required(ErrorMessage = "El nombre de la presentación es obligatorio.")]
         [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
         public string Nombre { get; set; } = null!;
 
@@ -22,12 +22,12 @@ namespace Syspharma.Domain.DTOs
         public string? Descripcion { get; set; }
     }
 
-    public class CategoriaUpdateDto
+    public class PresentacionUpdateDto
     {
-        [Required(ErrorMessage = "El ID de la categoría es obligatorio.")]
+        [Required(ErrorMessage = "El ID de la presentación es obligatorio.")]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "El nombre de la categoría es obligatorio.")]
+        [Required(ErrorMessage = "El nombre de la presentación es obligatorio.")]
         [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
         public string Nombre { get; set; } = null!;
 

@@ -42,11 +42,23 @@ namespace Syspharma.Data.Repositories
             return lista.Select(ToDto).ToList();
         }
 
-        // Para la página de gestión de categorías donde sí se necesitan ver todas
+        // Para la página de gestión de categorías donde sí se necesitan ver todas.
+        // El conteo de productos se calcula con un GROUP BY liviano en vez de
+        // traer la tabla de productos completa (con todos sus joins) al cliente.
         public async Task<List<CategoriaDto>> ObtenerTodosConInactivos()
         {
             var lista = await _context.Categorias.ToListAsync();
-            return lista.Select(ToDto).ToList();
+            var conteos = await _context.Productos
+                .GroupBy(p => p.CategoriaId)
+                .Select(g => new { CategoriaId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.CategoriaId, g => g.Count);
+
+            return lista.Select(c =>
+            {
+                var dto = ToDto(c);
+                dto.ProductosCount = conteos.TryGetValue(c.Id, out var count) ? count : 0;
+                return dto;
+            }).ToList();
         }
 
         public async Task<CategoriaDto?> ObtenerPorId(int id)

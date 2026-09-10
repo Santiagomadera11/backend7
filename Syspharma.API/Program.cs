@@ -109,6 +109,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IRolMaestroRepository, RolMaestroRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddScoped<IMarcaRepository, MarcaRepository>();
+builder.Services.AddScoped<IPresentacionRepository, PresentacionRepository>();
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>(); // Ya registrado
 builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
 builder.Services.AddScoped<IMedicoRepository, MedicoRepository>();
@@ -124,11 +126,15 @@ builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 builder.Services.AddScoped<IGastoRepository, GastoRepository>();
 builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
 builder.Services.AddScoped<IDevolucionRepository, DevolucionRepository>();
+builder.Services.AddScoped<ICarritoRepository, CarritoRepository>();
+builder.Services.AddScoped<INotificacionRepository, NotificacionRepository>();
 
 // 10. Servicios
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IRolMaestroService, RolMaestroService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IMarcaService, MarcaService>();
+builder.Services.AddScoped<IPresentacionService, PresentacionService>();
 builder.Services.AddScoped<IProductoService, ProductoService>(); // Ya registrado
 builder.Services.AddScoped<IProveedorService, ProveedorService>();
 builder.Services.AddScoped<IMedicoService, MedicoService>();
@@ -142,6 +148,8 @@ builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<IGastoService, GastoService>();
 builder.Services.AddScoped<IDisponibilidadService, DisponibilidadService>();
 builder.Services.AddScoped<IDevolucionService, DevolucionService>();
+builder.Services.AddScoped<ICarritoService, CarritoService>();
+builder.Services.AddScoped<INotificacionService, NotificacionService>();
 
 // 11. Otros
 builder.Services.AddMemoryCache();
@@ -176,10 +184,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-// Debug temporal: comprobar que el servicio quedó registrado (elimina este bloque después de probar)
-var helperProvider = builder.Services.BuildServiceProvider();
-var svcCheck = helperProvider.GetService<Syspharma.Business.Services.IDevolucionService>();
-if (svcCheck == null) Console.WriteLine("DEBUG: IDevolucionService NO está registrado.");
-else Console.WriteLine("DEBUG: IDevolucionService registrado correctamente.");
+await Syspharma.API.Startup.DataSeeder.SeedAsync(app.Services);
 
 app.Run();

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Syspharma.Data.Context;
 
@@ -11,9 +12,11 @@ using Syspharma.Data.Context;
 namespace Syspharma.Data.Migrations
 {
     [DbContext(typeof(SyspharmaContext))]
-    partial class SyspharmaContextModelSnapshot : ModelSnapshot
+    [Migration("20260909183951_AgregarCamposSeguridadMedicamento")]
+    partial class AgregarCamposSeguridadMedicamento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,65 +156,6 @@ namespace Syspharma.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.Carrito", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("FechaActualizacion")
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaActualizacion");
-
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
-                        .HasColumnName("usuarioId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId")
-                        .IsUnique();
-
-                    b.ToTable("carritos", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.CarritoItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int")
-                        .HasColumnName("cantidad");
-
-                    b.Property<int>("CarritoId")
-                        .HasColumnType("int")
-                        .HasColumnName("carritoId");
-
-                    b.Property<decimal>("PrecioUnitario")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("precioUnitario");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int")
-                        .HasColumnName("productoId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CarritoId");
-
-                    b.HasIndex("ProductoId");
-
-                    b.ToTable("carrito_items", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Categoria", b =>
@@ -1017,46 +961,6 @@ namespace Syspharma.Data.Migrations
                     b.ToTable("lotes", (string)null);
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Marca", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasColumnName("descripcion");
-
-                    b.Property<bool>("Estado")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("estado");
-
-                    b.Property<DateTime?>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("nombre");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Nombre")
-                        .IsUnique();
-
-                    b.ToTable("marcas", (string)null);
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Medico", b =>
                 {
                     b.Property<int>("Id")
@@ -1224,55 +1128,6 @@ namespace Syspharma.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("metodos_pago", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.Notificacion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaCreacion");
-
-                    b.Property<bool>("Leida")
-                        .HasColumnType("bit")
-                        .HasColumnName("leida");
-
-                    b.Property<string>("Mensaje")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("mensaje");
-
-                    b.Property<string>("Path")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("path");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("tipo");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("titulo");
-
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
-                        .HasColumnName("usuarioId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId", "FechaCreacion");
-
-                    b.ToTable("notificaciones", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Pedido", b =>
@@ -1452,46 +1307,6 @@ namespace Syspharma.Data.Migrations
                     b.ToTable("Permisos");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Presentacion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Descripcion")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasColumnName("descripcion");
-
-                    b.Property<bool>("Estado")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("estado");
-
-                    b.Property<DateTime?>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("nombre");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Nombre")
-                        .IsUnique();
-
-                    b.ToTable("presentaciones", (string)null);
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Producto", b =>
                 {
                     b.Property<int>("Id")
@@ -1534,9 +1349,10 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("imagen");
 
-                    b.Property<int?>("MarcaId")
-                        .HasColumnType("int")
-                        .HasColumnName("marcaId");
+                    b.Property<string>("Marca")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("marca");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -1558,9 +1374,10 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("precioCompra");
 
-                    b.Property<int?>("PresentacionId")
-                        .HasColumnType("int")
-                        .HasColumnName("presentacionId");
+                    b.Property<string>("Presentacion")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("presentacion");
 
                     b.Property<int?>("ProveedorId")
                         .HasColumnType("int")
@@ -1578,10 +1395,6 @@ namespace Syspharma.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK__producto__3213E83F11CBC83A");
-
-                    b.HasIndex("MarcaId");
-
-                    b.HasIndex("PresentacionId");
 
                     b.HasIndex("ProveedorId");
 
@@ -2182,41 +1995,33 @@ namespace Syspharma.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
-                        .HasColumnName("Cantidad");
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Descuento")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("Descuento");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("PrecioUnitario")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("PrecioUnitario");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
-                        .HasColumnName("ProductoId");
+                        .HasColumnType("int");
 
                     b.Property<string>("ProductoNombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("ProductoNombre");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("Subtotal");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("SubtotalCalculado")
-                        .HasColumnType("decimal(18, 2)")
-                        .HasColumnName("SubtotalCalculado");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("VentaId")
-                        .HasColumnType("int")
-                        .HasColumnName("VentaId");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("VVentaDetalles", (string)null);
+                    b.ToTable("VVentaDetalles");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Venta", b =>
@@ -2476,38 +2281,6 @@ namespace Syspharma.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Carrito", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Carritos_Usuarios");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.CarritoItem", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Carrito", "Carrito")
-                        .WithMany("Items")
-                        .HasForeignKey("CarritoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_CarritoItems_Carritos");
-
-                    b.HasOne("Syspharma.Data.Entities.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .IsRequired()
-                        .HasConstraintName("FK_CarritoItems_Productos");
-
-                    b.Navigation("Carrito");
-
-                    b.Navigation("Producto");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Cita", b =>
                 {
                     b.HasOne("Syspharma.Data.Entities.EstadosCitum", "Estado")
@@ -2744,18 +2517,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Medico");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Notificacion", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Notificaciones_Usuarios");
-
-                    b.Navigation("Usuario");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Pedido", b =>
                 {
                     b.HasOne("Syspharma.Data.Entities.EstadosPedido", "Estado")
@@ -2810,18 +2571,6 @@ namespace Syspharma.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Productos_Categorias");
 
-                    b.HasOne("Syspharma.Data.Entities.Marca", "Marca")
-                        .WithMany("Productos")
-                        .HasForeignKey("MarcaId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_Productos_Marca");
-
-                    b.HasOne("Syspharma.Data.Entities.Presentacion", "Presentacion")
-                        .WithMany("Productos")
-                        .HasForeignKey("PresentacionId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_Productos_Presentacion");
-
                     b.HasOne("Syspharma.Data.Entities.Proveedore", "Proveedor")
                         .WithMany("Productos")
                         .HasForeignKey("ProveedorId")
@@ -2829,10 +2578,6 @@ namespace Syspharma.Data.Migrations
                         .HasConstraintName("FK_Productos_Proveedores");
 
                     b.Navigation("Categoria");
-
-                    b.Navigation("Marca");
-
-                    b.Navigation("Presentacion");
 
                     b.Navigation("Proveedor");
                 });
@@ -3023,11 +2768,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Venta");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Carrito", b =>
-                {
-                    b.Navigation("Items");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Categoria", b =>
                 {
                     b.Navigation("Productos");
@@ -3078,11 +2818,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Venta");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Marca", b =>
-                {
-                    b.Navigation("Productos");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Medico", b =>
                 {
                     b.Navigation("Cita");
@@ -3107,11 +2842,6 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Syspharma.Data.Entities.Permiso", b =>
                 {
                     b.Navigation("RolesPermisos");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.Presentacion", b =>
-                {
-                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Producto", b =>

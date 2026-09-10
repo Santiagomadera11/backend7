@@ -15,7 +15,7 @@ namespace Syspharma.API.Controllers
         public PedidoController(IPedidoService service) => _service = service;
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerTodos() => Ok(await _service.ObtenerTodos());
+        public async Task<IActionResult> ObtenerTodos([FromQuery] DateTime? desde = null) => Ok(await _service.ObtenerTodos(desde));
 
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerPorId(int id)

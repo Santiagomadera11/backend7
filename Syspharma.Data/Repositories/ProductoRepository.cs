@@ -18,6 +18,7 @@ namespace Syspharma.Data.Repositories
         Task<bool> CambiarEstado(int id, bool estado);
         Task<bool> Eliminar(int id);
         Task<List<ProductoDto>> ProximosAVencer(int dias);
+        Task<List<ProductoPublicoDto>> ObtenerCatalogoPublico();
     }
 
     public class ProductoRepository : IProductoRepository
@@ -38,8 +39,10 @@ namespace Syspharma.Data.Repositories
                 Id = p.Id,
                 Nombre = p.Nombre,
                 Descripcion = p.Descripcion,
-                Marca = p.Marca,
-                Presentacion = p.Presentacion,
+                MarcaId = p.MarcaId,
+                MarcaNombre = p.Marca?.Nombre,
+                PresentacionId = p.PresentacionId,
+                PresentacionNombre = p.Presentacion?.Nombre,
                 CategoriaId = p.CategoriaId,
                 CategoriaNombre = p.Categoria?.Nombre,
                 ProveedorId = p.ProveedorId,
@@ -62,7 +65,13 @@ namespace Syspharma.Data.Repositories
                     Concentracion = p.ProductoMedicamento.Concentracion,
                     ViaAdministracion = p.ProductoMedicamento.ViaAdministracion,
                     RegistroSanitario = p.ProductoMedicamento.RegistroSanitario,
-                    RequiereFormula = p.ProductoMedicamento.RequiereFormula
+                    RequiereFormula = p.ProductoMedicamento.RequiereFormula,
+                    Indicaciones = p.ProductoMedicamento.Indicaciones,
+                    Posologia = p.ProductoMedicamento.Posologia,
+                    UnidadesPorEnvase = p.ProductoMedicamento.UnidadesPorEnvase,
+                    RequiereRefrigeracion = p.ProductoMedicamento.RequiereRefrigeracion,
+                    AfectaConduccion = p.ProductoMedicamento.AfectaConduccion,
+                    Fotosensible = p.ProductoMedicamento.Fotosensible
                 } : null,
                 Lotes = activeLotes?.Select(l => new LoteDto
                 {
@@ -81,6 +90,8 @@ namespace Syspharma.Data.Repositories
             var productos = await _context.Productos
                 .Include(p => p.Categoria)
                 .Include(p => p.Proveedor)
+                .Include(p => p.Marca)
+                .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
                 .Include(p => p.Lotes)
                 .ToListAsync();
@@ -93,11 +104,43 @@ namespace Syspharma.Data.Repositories
             var p = await _context.Productos
                 .Include(p => p.Categoria)
                 .Include(p => p.Proveedor)
+                .Include(p => p.Marca)
+                .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
                 .Include(p => p.Lotes)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             return p == null ? null : MapToDto(p);
+        }
+
+        public async Task<List<ProductoPublicoDto>> ObtenerCatalogoPublico()
+        {
+            var productos = await _context.Productos
+                .Include(p => p.Categoria)
+                .Include(p => p.Marca)
+                .Include(p => p.Presentacion)
+                .Include(p => p.ProductoMedicamento)
+                .Where(p => p.Estado == true)
+                .ToListAsync();
+
+            return productos.Select(p => new ProductoPublicoDto
+            {
+                Id = p.Id,
+                Nombre = p.Nombre,
+                Precio = p.Precio,
+                Stock = p.Stock,
+                Imagen = p.Imagen,
+                Categoria = p.Categoria?.Nombre ?? "Sin categoría",
+                Marca = p.Marca?.Nombre ?? "",
+                Presentacion = p.Presentacion?.Nombre ?? "",
+                TipoProducto = p.ProductoMedicamento != null ? "Medicamento" : "Producto General",
+                Composicion = p.ProductoMedicamento?.Composicion ?? "",
+                Concentracion = p.ProductoMedicamento?.Concentracion ?? "",
+                ViaAdministracion = p.ProductoMedicamento?.ViaAdministracion ?? "",
+                RegistroSanitario = p.ProductoMedicamento?.RegistroSanitario ?? "",
+                RequiereFormula = p.ProductoMedicamento?.RequiereFormula ?? false,
+                Estado = p.Estado,
+            }).ToList();
         }
 
         public async Task<List<ProductoDto>> ProximosAVencer(int dias)
@@ -106,6 +149,8 @@ namespace Syspharma.Data.Repositories
             var productos = await _context.Productos
                 .Include(p => p.Categoria)
                 .Include(p => p.Proveedor)
+                .Include(p => p.Marca)
+                .Include(p => p.Presentacion)
                 .Include(p => p.ProductoMedicamento)
                 .Include(p => p.Lotes)
                 .Where(p => p.Estado == true)
@@ -120,12 +165,18 @@ namespace Syspharma.Data.Repositories
 
         public async Task<ProductoDto> Crear(ProductoCreateDto dto)
         {
+            if (!string.IsNullOrWhiteSpace(dto.CodigoBarras))
+            {
+                var yaExiste = await _context.Productos.AnyAsync(p => p.CodigoBarras == dto.CodigoBarras);
+                if (yaExiste) throw new Exception("Ya existe un producto con ese código de barras.");
+            }
+
             var producto = new Producto
             {
                 Nombre = dto.Nombre,
                 Descripcion = dto.Descripcion,
-                Marca = dto.Marca,
-                Presentacion = dto.Presentacion,
+                MarcaId = dto.MarcaId,
+                PresentacionId = dto.PresentacionId,
                 CategoriaId = dto.CategoriaId,
                 ProveedorId = dto.ProveedorId,
                 Precio = dto.Precio,
@@ -152,7 +203,13 @@ namespace Syspharma.Data.Repositories
                     Concentracion = dto.Medicamento.Concentracion,
                     ViaAdministracion = dto.Medicamento.ViaAdministracion,
                     RegistroSanitario = dto.Medicamento.RegistroSanitario,
-                    RequiereFormula = dto.Medicamento.RequiereFormula
+                    RequiereFormula = dto.Medicamento.RequiereFormula,
+                    Indicaciones = dto.Medicamento.Indicaciones,
+                    Posologia = dto.Medicamento.Posologia,
+                    UnidadesPorEnvase = dto.Medicamento.UnidadesPorEnvase,
+                    RequiereRefrigeracion = dto.Medicamento.RequiereRefrigeracion,
+                    AfectaConduccion = dto.Medicamento.AfectaConduccion,
+                    Fotosensible = dto.Medicamento.Fotosensible
                 };
 
                 _context.ProductoMedicamentos.Add(medicamento);
@@ -169,10 +226,16 @@ namespace Syspharma.Data.Repositories
             if (producto == null)
                 throw new Exception("Producto no encontrado");
 
+            if (!string.IsNullOrWhiteSpace(dto.CodigoBarras))
+            {
+                var yaExiste = await _context.Productos.AnyAsync(p => p.CodigoBarras == dto.CodigoBarras && p.Id != dto.Id);
+                if (yaExiste) throw new Exception("Ya existe un producto con ese código de barras.");
+            }
+
             producto.Nombre = dto.Nombre;
             producto.Descripcion = dto.Descripcion;
-            producto.Marca = dto.Marca;
-            producto.Presentacion = dto.Presentacion;
+            producto.MarcaId = dto.MarcaId;
+            producto.PresentacionId = dto.PresentacionId;
             producto.CategoriaId = dto.CategoriaId;
             producto.ProveedorId = dto.ProveedorId;
             producto.Precio = dto.Precio;
@@ -201,7 +264,13 @@ namespace Syspharma.Data.Repositories
                         Concentracion = dto.Medicamento.Concentracion,
                         ViaAdministracion = dto.Medicamento.ViaAdministracion,
                         RegistroSanitario = dto.Medicamento.RegistroSanitario,
-                        RequiereFormula = dto.Medicamento.RequiereFormula
+                        RequiereFormula = dto.Medicamento.RequiereFormula,
+                        Indicaciones = dto.Medicamento.Indicaciones,
+                        Posologia = dto.Medicamento.Posologia,
+                        UnidadesPorEnvase = dto.Medicamento.UnidadesPorEnvase,
+                        RequiereRefrigeracion = dto.Medicamento.RequiereRefrigeracion,
+                        AfectaConduccion = dto.Medicamento.AfectaConduccion,
+                        Fotosensible = dto.Medicamento.Fotosensible
                     };
                     _context.ProductoMedicamentos.Add(nuevoMedicamento);
                 }
@@ -213,6 +282,12 @@ namespace Syspharma.Data.Repositories
                     medicamentoExistente.ViaAdministracion = dto.Medicamento.ViaAdministracion;
                     medicamentoExistente.RegistroSanitario = dto.Medicamento.RegistroSanitario;
                     medicamentoExistente.RequiereFormula = dto.Medicamento.RequiereFormula;
+                    medicamentoExistente.Indicaciones = dto.Medicamento.Indicaciones;
+                    medicamentoExistente.Posologia = dto.Medicamento.Posologia;
+                    medicamentoExistente.UnidadesPorEnvase = dto.Medicamento.UnidadesPorEnvase;
+                    medicamentoExistente.RequiereRefrigeracion = dto.Medicamento.RequiereRefrigeracion;
+                    medicamentoExistente.AfectaConduccion = dto.Medicamento.AfectaConduccion;
+                    medicamentoExistente.Fotosensible = dto.Medicamento.Fotosensible;
                 }
                 await _context.SaveChangesAsync();
             }

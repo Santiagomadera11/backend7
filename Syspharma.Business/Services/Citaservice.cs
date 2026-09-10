@@ -5,7 +5,7 @@ namespace Syspharma.Business.Services
 {
     public interface ICitaService
     {
-        Task<List<CitaDto>> ObtenerTodos();
+        Task<List<CitaDto>> ObtenerTodos(DateTime? desde = null);
         Task<CitaDto?> ObtenerPorId(int id);
         Task<CitaDto> Crear(CitaCreateDto dto);
         Task<CitaDto> Actualizar(CitaUpdateDto dto);
@@ -18,7 +18,7 @@ namespace Syspharma.Business.Services
     {
         private readonly ICitaRepository _repo;
         public CitaService(ICitaRepository repo) => _repo = repo;
-        public Task<List<CitaDto>> ObtenerTodos() => _repo.ObtenerTodos();
+        public Task<List<CitaDto>> ObtenerTodos(DateTime? desde = null) => _repo.ObtenerTodos(desde);
         public Task<CitaDto?> ObtenerPorId(int id) => _repo.ObtenerPorId(id);
         public Task<CitaDto> Crear(CitaCreateDto dto) => _repo.Crear(dto);
         public Task<CitaDto> Actualizar(CitaUpdateDto dto) => _repo.Actualizar(dto);
