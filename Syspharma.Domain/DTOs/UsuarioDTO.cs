@@ -9,6 +9,7 @@
         public string? TipoDocumento { get; set; }
         public int? TipoDocumentoId { get; set; }
         public string? Telefono { get; set; }
+        public string? Direccion { get; set; }
         public string RolNombre { get; set; } = null!;
         public string? Avatar { get; set; }
         public bool Estado { get; set; }

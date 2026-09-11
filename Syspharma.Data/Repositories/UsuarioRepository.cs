@@ -34,6 +34,7 @@ namespace Syspharma.Data.Repositories
             TipoDocumento = u.TipoDocumento?.Nombre,
             TipoDocumentoId = u.TipoDocumentoId,
             Telefono = u.Telefono,
+            Direccion = u.Direccion,
             RolNombre = u.Role?.Nombre ?? "",
             Avatar = u.Avatar,
             Estado = u.Estado,
@@ -113,6 +114,7 @@ namespace Syspharma.Data.Repositories
             usuario.TipoDocumentoId = dto.TipoDocumentoId;
             usuario.Documento = dto.Documento;
             usuario.Telefono = dto.Telefono;
+            usuario.Direccion = dto.Direccion;
             usuario.RoleId = dto.RolId;
             usuario.Estado = dto.Estado;
             usuario.Avatar = dto.Avatar ?? usuario.Avatar; // ← línea añadida
@@ -129,6 +131,9 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
             if (usuario == null)
                 throw new Exception("Usuario no encontrado");
+
+            if (!estado && (usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false))
+                throw new Exception("No se puede desactivar a un usuario con rol Administrador.");
 
             usuario.Estado = estado;
             await _context.SaveChangesAsync();

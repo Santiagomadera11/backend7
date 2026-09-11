@@ -13,8 +13,6 @@ public partial class MetodosPago
 
     public DateTime? FechaCreacion { get; set; }
 
-    public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
-
     public virtual ICollection<Venta> Venta { get; set; } = new List<Venta>();
 
 }

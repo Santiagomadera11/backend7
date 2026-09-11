@@ -16,7 +16,6 @@ namespace Syspharma.Business.Services
         Task<List<EstadoVentaDto>> ObtenerEstados();
         Task<bool> CambiarEstado(int id, int estadoId);
         Task<bool> Anular(int id);
-        Task<VentaDto> CrearDesdePedido(int pedidoId);
     }
 
     public class VentaService : IVentaService
@@ -29,123 +28,6 @@ namespace Syspharma.Business.Services
             _context = context;
             _mapper = mapper;
         }
-        public async Task<VentaDto> CrearDesdePedido(int pedidoId)
-        {
-            // 1. Cargar el pedido con sus detalles
-            var pedido = await _context.Pedidos
-                .Include(p => p.PedidoDetalles)
-                    .ThenInclude(d => d.Producto)
-                .Include(p => p.MetodoPago)
-                .Include(p => p.Usuario)
-                .FirstOrDefaultAsync(p => p.Id == pedidoId)
-                ?? throw new Exception($"Pedido con ID {pedidoId} no encontrado.");
-
-            // 2. Buscar el turno activo
-            // El turno activo es el que tiene estado = "activo" más reciente.
-            var turnoActivo = await _context.Turnos
-                .Where(t => t.Estado == "activo")
-                .OrderByDescending(t => t.FechaApertura)
-                .FirstOrDefaultAsync()
-                ?? throw new Exception(
-                    "No hay un turno (caja) activo. Abrí un turno antes de marcar el pedido como Entregado.");
-
-            // 3. Buscar estado "Completada" en ventas
-            var estadoCompletada = await _context.EstadosVenta
-                .FirstOrDefaultAsync(e => e.Nombre == "Completada")
-                ?? throw new Exception("No se encontró el estado 'Completada' en la tabla estados_venta.");
-
-
-            int metodoPagoId;
-            if (pedido.MetodoPagoId.HasValue)
-            {
-                metodoPagoId = pedido.MetodoPagoId.Value;
-            }
-            else
-            {
-                var metodoPorDefecto = await _context.MetodosPagos
-                    .Where(m => m.Estado == true)
-                    .OrderBy(m => m.Id)
-                    .FirstOrDefaultAsync()
-                    ?? throw new Exception("No hay métodos de pago disponibles en el sistema.");
-
-                metodoPagoId = metodoPorDefecto.Id;
-            }
-
-            // 5. Validar que haya detalles con ProductoId (no nulo)
-            var detallesValidos = pedido.PedidoDetalles
-                .Where(d => d.ProductoId.HasValue)
-                .ToList();
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                // 6. Crear la Venta
-                var venta = new Venta
-                {
-                    NumeroVenta = $"VNT-{DateTime.Now:yyyyMMddHHmmss}-P{pedido.Id}",
-                    TurnoId = turnoActivo.Id,
-                    // UsuarioId: usar el del pedido si existe, si no el que abrió el turno
-                    UsuarioId = pedido.UsuarioId ?? turnoActivo.UsuarioId,
-                    ClienteNombre = string.IsNullOrWhiteSpace(pedido.ClienteNombre)
-                        ? "Consumidor Final"
-                        : pedido.ClienteNombre,
-                    ClienteDocumento = pedido.ClienteDocumento,
-                    ClienteTelefono = pedido.ClienteTelefono,
-                    MetodoPagoId = metodoPagoId,
-                    EstadoId = estadoCompletada.Id,
-                    Subtotal = pedido.Subtotal,
-                    Iva = pedido.Iva,
-                    PorcentajeIva = 0, // ajustá si tu Pedido guarda el porcentaje
-                    Total = pedido.Total,
-                    Notas = $"Generada automáticamente desde pedido {pedido.NumeroPedido}",
-                    FechaVenta = DateTime.Now,
-                    Origen = "WEB",
-                    PedidoId = pedido.Id
-                };
-
-                _context.Ventas.Add(venta);
-                await _context.SaveChangesAsync(); // necesitamos el Id de la venta
-
-                // 7. Copiar los detalles de PedidoDetalle → VentaDetalle
-                // NOTA: el stock del pedido YA se descontó en Pedidorepository.Crear al
-                // generar el pedido. Este método solo genera los registros contables
-                // Venta/VentaDetalle y NO debe volver a tocar Producto.Stock (bug fix:
-                // antes se descontaba dos veces). Se propagan FormaVentaId/Tipo/FactorUnidades
-                // tal cual quedaron congelados en el PedidoDetalle de origen, sin resolver de nuevo.
-                foreach (var detalle in detallesValidos)
-                {
-                    _context.VentaDetalles.Add(new VentaDetalle
-                    {
-                        VentaId = venta.Id,
-                        ProductoId = detalle.ProductoId!.Value,
-                        Cantidad = detalle.Cantidad,
-                        PrecioUnitario = detalle.PrecioUnitario,
-                        Descuento = 0,
-                        Subtotal = detalle.Subtotal,
-                        FormaVentaId = detalle.FormaVentaId,
-                        FormaVentaTipo = detalle.FormaVentaTipo,
-                        FactorUnidades = detalle.FactorUnidades
-                    });
-                }
-
-                // 8. Actualizar totales del turno
-                turnoActivo.TotalVentas += pedido.Total;
-                turnoActivo.ResumenVentas += 1;
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return await ObtenerPorId(venta.Id)
-                    ?? _mapper.Map<VentaDto>(venta);
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-
         public async Task<List<VentaDto>> ObtenerTodos()
         {
             try
@@ -222,7 +104,6 @@ namespace Syspharma.Business.Services
                     Notas = dto.Notas,
                     FechaVenta = DateTime.Now,
                     Origen = string.IsNullOrWhiteSpace(dto.Origen) ? "CAJA" : dto.Origen,
-                    PedidoId = dto.PedidoId,
                     ReferenciasPago = dto.ReferenciasPago
                 };
 

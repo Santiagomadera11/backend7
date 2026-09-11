@@ -16,7 +16,6 @@ namespace Syspharma.API.Controllers
         public CategoriaServicioController(SyspharmaContext context) => _context = context;
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerTodos()
         {
             var categorias = await _context.CategoriaServicios

@@ -18,7 +18,6 @@ namespace Syspharma.Data.Repositories
         Task<bool> CambiarEstado(int id, bool estado);
         Task<bool> Eliminar(int id);
         Task<List<ProductoDto>> ProximosAVencer(int dias);
-        Task<List<ProductoPublicoDto>> ObtenerCatalogoPublico();
     }
 
     public class ProductoRepository : IProductoRepository
@@ -183,45 +182,6 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             return p == null ? null : MapToDto(p);
-        }
-
-        public async Task<List<ProductoPublicoDto>> ObtenerCatalogoPublico()
-        {
-            var productos = await _context.Productos
-                .Include(p => p.Categoria)
-                .Include(p => p.Marca)
-                .Include(p => p.Presentacion)
-                .Include(p => p.ProductoMedicamento)
-                .Include(p => p.FormasVenta)
-                .Where(p => p.Estado == true)
-                .ToListAsync();
-
-            return productos.Select(p => new ProductoPublicoDto
-            {
-                Id = p.Id,
-                Nombre = p.Nombre,
-                Precio = p.Precio,
-                Stock = p.Stock,
-                Imagen = p.Imagen,
-                Categoria = p.Categoria?.Nombre ?? "Sin categoría",
-                Marca = p.Marca?.Nombre ?? "",
-                Presentacion = p.Presentacion?.Nombre ?? "",
-                TipoProducto = p.ProductoMedicamento != null ? "Medicamento" : "Producto General",
-                Composicion = p.ProductoMedicamento?.Composicion ?? "",
-                Concentracion = p.ProductoMedicamento?.Concentracion ?? "",
-                ViaAdministracion = p.ProductoMedicamento?.ViaAdministracion ?? "",
-                RegistroSanitario = p.ProductoMedicamento?.RegistroSanitario ?? "",
-                RequiereFormula = p.ProductoMedicamento?.RequiereFormula ?? false,
-                Estado = p.Estado,
-                FormasVenta = p.FormasVenta?.Where(f => f.Activo).Select(f => new ProductoFormaVentaDto
-                {
-                    Id = f.Id,
-                    Tipo = f.Tipo,
-                    Precio = f.Precio,
-                    FactorUnidades = f.FactorUnidades,
-                    Activo = f.Activo
-                }).ToList() ?? new()
-            }).ToList();
         }
 
         public async Task<List<ProductoDto>> ProximosAVencer(int dias)
@@ -457,13 +417,12 @@ namespace Syspharma.Data.Repositories
             if (producto == null) return false;
 
             var enVentas = await _context.VentaDetalles.AnyAsync(d => d.ProductoId == id);
-            var enPedidos = await _context.PedidoDetalles.AnyAsync(d => d.ProductoId == id);
             var enCompras = await _context.CompraDetalles.AnyAsync(d => d.ProductoId == id);
             var enDevoluciones = await _context.DetallesDevoluciones.AnyAsync(d => d.ProductoId == id);
 
-            if (enVentas || enPedidos || enCompras || enDevoluciones)
+            if (enVentas || enCompras || enDevoluciones)
             {
-                throw new Exception("No se puede eliminar el producto porque está registrado en transacciones de venta, compra, devolución o pedidos. Desactívelo en su lugar.");
+                throw new Exception("No se puede eliminar el producto porque está registrado en transacciones de venta, compra o devolución. Desactívelo en su lugar.");
             }
 
             _context.Productos.Remove(producto);

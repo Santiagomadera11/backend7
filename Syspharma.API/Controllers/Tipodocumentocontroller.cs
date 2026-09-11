@@ -16,7 +16,6 @@ namespace Syspharma.API.Controllers
         public TipoDocumentoController(SyspharmaContext context) => _context = context;
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerTodos()
         {
             var tipos = await _context.TiposDocumentos

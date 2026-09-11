@@ -29,15 +29,6 @@ namespace Syspharma.API.Controllers
             return Ok(result);
         }
 
-        // Catálogo público (sin costos ni datos de proveedor) para landing/tienda sin sesión.
-        [HttpGet("publico")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ObtenerCatalogoPublico()
-        {
-            var result = await _service.ObtenerCatalogoPublico();
-            return Ok(result);
-        }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerPorId(int id)
         {
@@ -105,7 +96,6 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpGet("proximos-a-vencer")]
-        [AllowAnonymous]
         public async Task<IActionResult> ProximosAVencer([FromQuery] int? dias = null)
         {
             try
