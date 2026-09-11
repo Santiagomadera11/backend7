@@ -26,13 +26,15 @@ namespace Syspharma.API.Controllers
         private readonly UserManager<Usuario> _userManager;
         private readonly SyspharmaContext _context;
         private readonly ILogger<UsuarioController> _logger;
+        private readonly Syspharma.API.Services.IImageUploadService _imageUploadService;
 
-        public UsuarioController(IUsuarioService service, UserManager<Usuario> userManager, SyspharmaContext context, ILogger<UsuarioController> logger)
+        public UsuarioController(IUsuarioService service, UserManager<Usuario> userManager, SyspharmaContext context, ILogger<UsuarioController> logger, Syspharma.API.Services.IImageUploadService imageUploadService)
         {
             _service = service;
             _userManager = userManager;
             _context = context;
             _logger = logger;
+            _imageUploadService = imageUploadService;
         }
 
         [HttpGet]
@@ -154,9 +156,28 @@ namespace Syspharma.API.Controllers
 
         [HttpPost("{id}/foto")]
         [Consumes("multipart/form-data")]
-        [RequirePermission("users.edit")]
         public async Task<IActionResult> SubirFoto(int id, IFormFile foto)
         {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var loggedInUserId))
+                return Unauthorized();
+
+            if (loggedInUserId != id)
+            {
+                var usuarioLogueado = await _context.Usuarios
+                    .Include(u => u.Role)
+                        .ThenInclude(r => r.RolesPermisos)
+                            .ThenInclude(rp => rp.Permiso)
+                    .FirstOrDefaultAsync(u => u.Id == loggedInUserId);
+
+                var esAdmin = usuarioLogueado?.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false;
+                var tienePermiso = esAdmin || (usuarioLogueado?.Role?.RolesPermisos?.Any(rp =>
+                    rp.Permiso.Codigo.Equals("users.edit", StringComparison.OrdinalIgnoreCase)) ?? false);
+
+                if (!tienePermiso)
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "No tienes el permiso requerido: users.edit" });
+            }
+
             try
             {
                 var usuario = await _context.Usuarios.FindAsync(id);
@@ -170,26 +191,7 @@ namespace Syspharma.API.Controllers
                 if (!extensionesPermitidas.Contains(extension))
                     return BadRequest(new { message = "Solo se permiten JPG, PNG o WEBP" });
 
-                // Eliminar foto anterior
-                if (!string.IsNullOrEmpty(usuario.Avatar))
-                {
-                    var fotoAnterior = Path.Combine(
-                        Directory.GetCurrentDirectory(), "wwwroot",
-                        usuario.Avatar.TrimStart('/'));
-                    if (System.IO.File.Exists(fotoAnterior))
-                        System.IO.File.Delete(fotoAnterior);
-                }
-
-                var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "fotos-perfil");
-                Directory.CreateDirectory(carpeta);
-
-                var nombreArchivo = $"user_{id}_{DateTime.Now.Ticks}{extension}";
-                var rutaCompleta = Path.Combine(carpeta, nombreArchivo);
-
-                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
-                    await foto.CopyToAsync(stream);
-
-                usuario.Avatar = $"/fotos-perfil/{nombreArchivo}";
+                usuario.Avatar = await _imageUploadService.SubirImagen(foto, "syspharma/avatares");
                 await _context.SaveChangesAsync();
 
                 return Ok(new { avatar = usuario.Avatar });

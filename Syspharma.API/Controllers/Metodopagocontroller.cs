@@ -16,7 +16,6 @@ namespace Syspharma.API.Controllers
         public MetodoPagoController(SyspharmaContext context) => _context = context;
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerTodos()
         {
             var metodos = await _context.MetodosPagos
@@ -85,8 +84,7 @@ namespace Syspharma.API.Controllers
             var metodo = await _context.MetodosPagos.FindAsync(id);
             if (metodo == null) return NotFound(new { message = "Método de pago no encontrado" });
 
-            var enUso = await _context.Ventas.AnyAsync(v => v.MetodoPagoId == id) ||
-                        await _context.Pedidos.AnyAsync(p => p.MetodoPagoId == id);
+            var enUso = await _context.Ventas.AnyAsync(v => v.MetodoPagoId == id);
             if (enUso)
                 return BadRequest(new { message = "No se puede eliminar porque está en uso" });
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Syspharma.Data.Context;
 
@@ -11,9 +12,11 @@ using Syspharma.Data.Context;
 namespace Syspharma.Data.Migrations
 {
     [DbContext(typeof(SyspharmaContext))]
-    partial class SyspharmaContextModelSnapshot : ModelSnapshot
+    [Migration("20260911131539_QuitarPedidosCarritoNotificaciones")]
+    partial class QuitarPedidosCarritoNotificaciones
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

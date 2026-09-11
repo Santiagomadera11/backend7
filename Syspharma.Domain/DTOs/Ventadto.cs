@@ -25,7 +25,6 @@ namespace Syspharma.Domain.DTOs
         public string? Notas { get; set; }
         public DateTime? FechaVenta { get; set; }
         public string Origen { get; set; } = "CAJA";
-        public int? PedidoId { get; set; }
         public string? ReferenciasPago { get; set; }
         public List<VentaDetalleDto> Detalles { get; set; } = new();
         public List<VentaDetalleServicioDto> Servicios { get; set; } = new();
@@ -98,8 +97,6 @@ namespace Syspharma.Domain.DTOs
 
         [StringLength(50, ErrorMessage = "El origen no puede superar los 50 caracteres.")]
         public string Origen { get; set; } = "CAJA";
-
-        public int? PedidoId { get; set; }
 
         [StringLength(100, ErrorMessage = "Las referencias de pago no pueden superar los 100 caracteres.")]
         public string? ReferenciasPago { get; set; }

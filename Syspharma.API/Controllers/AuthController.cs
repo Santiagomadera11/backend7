@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Caching.Memory;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Syspharma.Data.Context;
@@ -74,78 +76,28 @@ namespace Syspharma.API.Controllers
             });
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
-        {
-            _logger.LogInformation("Register payload: {@dto}", dto);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password) || string.IsNullOrWhiteSpace(dto.Nombre))
-                return BadRequest(new { message = "Nombre, email y password son obligatorios" });
-
-            if (!await _context.Database.CanConnectAsync())
-                return StatusCode(503, new { message = "No se puede conectar a la base de datos." });
-
-            if (await _context.Usuarios.AnyAsync(u => u.Email == dto.Email))
-                return BadRequest(new { message = "El email ya está registrado" });
-
-            if (!string.IsNullOrEmpty(dto.Documento) && await _context.Usuarios.AnyAsync(u => u.Documento == dto.Documento))
-                return BadRequest(new { message = "El documento ya está registrado" });
-
-            var usuario = new Usuario
-            {
-                Nombre = dto.Nombre,
-                Email = dto.Email,
-                UserName = dto.Email,
-                RoleId = dto.RoleId,
-                Documento = string.IsNullOrEmpty(dto.Documento) ? null : dto.Documento,
-                TipoDocumentoId = dto.TipoDocumentoId,
-                Telefono = dto.Telefono,
-                Estado = true,
-                FechaCreacion = DateTime.Now
-            };
-
-            var resultado = await _userManager.CreateAsync(usuario, dto.Password);
-            if (!resultado.Succeeded)
-                return BadRequest(resultado.Errors);
-
-            // ── Correo de bienvenida ──────────────────────────────────────
-            var frontendUrl = _config["EmailSettings:FrontendUrl"] ?? "http://localhost:5173";
-            try
-            {
-                // Caso A: cliente se registra solo (no trae contraseña temporal)
-                if (string.IsNullOrEmpty(dto.PasswordTemporal))
-                {
-                    var htmlBienvenida = EmailTemplates.Bienvenida(usuario.Nombre, usuario.Email!, frontendUrl);
-                    await _emailSender.SendEmailAsync(usuario.Email!, "¡Bienvenido a SysPharma! 🎉", htmlBienvenida);
-                }
-                // Caso B: admin crea usuario con contraseña temporal
-                else
-                {
-                    var htmlCredenciales = EmailTemplates.BienvenidaConCredenciales(usuario.Nombre, usuario.Email!, dto.PasswordTemporal, frontendUrl);
-                    await _emailSender.SendEmailAsync(usuario.Email!, "Tu cuenta en SysPharma está lista 🎉", htmlCredenciales);
-                }
-            }
-            catch (Exception ex)
-            {
-                // No bloqueamos el registro si el correo falla — solo lo logueamos
-                _logger.LogWarning(ex, "No se pudo enviar correo de bienvenida a {Email}", usuario.Email);
-            }
-
-            return Ok(new { message = "Usuario registrado correctamente" });
-        }
-
+        // Autoedición de perfil: solo el propio usuario autenticado puede editar sus datos
+        // (editar A OTROS usuarios es responsabilidad de UsuarioController, que exige el
+        // permiso users.edit). Antes esta ruta no tenía [Authorize] ni verificaba el
+        // dueño del token, así que cualquiera (sin sesión) podía reescribir el perfil de
+        // cualquier usuario por ID.
+        //
+        // Usa su propio DTO (UpdateMiPerfilDto) en vez del UsuarioUpdateDto que usa el
+        // admin: ese último exige RolId/Estado como obligatorios (los necesita el admin
+        // para editar a otros), pero el front de "Mi Perfil" nunca los manda. Como
+        // AuthController tiene [ApiController], el ModelState inválido corta la petición
+        // con un 400 automático ANTES de que el código del método llegue a ejecutarse, así
+        // que un ModelState.Remove("RolId") acá adentro nunca alcanza a correr.
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateProfile(int id, [FromBody] Syspharma.Domain.DTOs.UsuarioUpdateDto dto)
+        public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateMiPerfilDto dto)
         {
-            ModelState.Remove("RoId");
-            ModelState.Remove("RolId");
-            ModelState.Remove("Estado");
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var loggedInUserId))
+                return Unauthorized();
 
-            if (!ModelState.IsValid)
-                return BadRequest(new { message = "Datos inválidos en el formulario", errors = ModelState });
+            if (loggedInUserId != id)
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "No puedes editar el perfil de otro usuario." });
 
             if (id != dto.Id)
                 return BadRequest(new { message = "El ID del usuario no coincide con la URL" });
@@ -171,7 +123,7 @@ namespace Syspharma.API.Controllers
                     return BadRequest(new { message = "El documento ya se encuentra registrado" });
             }
 
-            usuario.Nombre = $"{dto.Nombre} {dto.Apellidos}".Trim();
+            usuario.Nombre = dto.Nombre.Trim();
             usuario.TipoDocumentoId = dto.TipoDocumentoId;
             usuario.Documento = string.IsNullOrEmpty(dto.Documento) ? null : dto.Documento;
             usuario.Telefono = string.IsNullOrEmpty(dto.Telefono) ? null : dto.Telefono;
@@ -227,13 +179,15 @@ namespace Syspharma.API.Controllers
         [HttpPost("verify-code")]
         public IActionResult VerifyCode([FromBody] VerifyCodeDto dto)
         {
+            // Solo confirma para la UI que el código es correcto — a propósito NO lo
+            // borra del caché acá. El único paso que puede consumirlo es ResetPassword,
+            // que es el que de verdad cambia la contraseña.
             if (!_cache.TryGetValue($"recovery_{dto.Email}", out string? codeGuardado))
                 return BadRequest(new { message = "Código expirado o no encontrado." });
 
             if (codeGuardado?.Trim() != dto.Code.Trim())
                 return BadRequest(new { message = "Código incorrecto." });
 
-            _cache.Remove($"recovery_{dto.Email}");
             return Ok(new { message = "Código verificado correctamente." });
         }
 
@@ -242,6 +196,19 @@ namespace Syspharma.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NewPassword))
                 return BadRequest(new { message = "Email y nueva contraseña son requeridos." });
+
+            // Antes este endpoint reseteaba la contraseña con solo el email, sin pedir
+            // el código de verificación — cualquiera podía tomar cualquier cuenta con
+            // solo conocer su correo. Ahora exige el mismo código enviado por mail y lo
+            // valida acá, que es el único lugar donde efectivamente se consume.
+            if (string.IsNullOrWhiteSpace(dto.Code))
+                return BadRequest(new { message = "El código de verificación es requerido." });
+
+            if (!_cache.TryGetValue($"recovery_{dto.Email}", out string? codeGuardado))
+                return BadRequest(new { message = "Código expirado o no encontrado. Solicita uno nuevo." });
+
+            if (codeGuardado?.Trim() != dto.Code.Trim())
+                return BadRequest(new { message = "Código incorrecto." });
 
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
@@ -253,6 +220,7 @@ namespace Syspharma.API.Controllers
             if (!resultado.Succeeded)
                 return BadRequest(new { message = "Error al cambiar la contraseña.", errors = resultado.Errors });
 
+            _cache.Remove($"recovery_{dto.Email}");
             return Ok(new { message = "Contraseña actualizada correctamente." });
         }
 
@@ -291,20 +259,36 @@ namespace Syspharma.API.Controllers
         public string Password { get; set; } = null!;
     }
 
-    public class RegisterDto
+
+    public class UpdateMiPerfilDto
     {
+        [Required(ErrorMessage = "El ID del usuario es obligatorio.")]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "El nombre es obligatorio.")]
+        [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
         public string Nombre { get; set; } = null!;
+
+        [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
+        [StringLength(100, ErrorMessage = "El correo electrónico no puede superar los 100 caracteres.")]
         public string Email { get; set; } = null!;
-        public string Password { get; set; } = null!;
-        public int RoleId { get; set; }
+
+        [StringLength(20, ErrorMessage = "El número de documento no puede superar los 20 caracteres.")]
         public string? Documento { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "El tipo de documento seleccionado no es válido.")]
         public int? TipoDocumentoId { get; set; }
+
+        [Phone(ErrorMessage = "El número telefónico no es válido.")]
+        [StringLength(20, ErrorMessage = "El número telefónico no puede superar los 20 caracteres.")]
         public string? Telefono { get; set; }
-        // Opcional — solo se envía cuando el admin crea el usuario
-        public string? PasswordTemporal { get; set; }
+
+        [StringLength(250, ErrorMessage = "La dirección no puede superar los 250 caracteres.")]
+        public string? Direccion { get; set; }
     }
 
     public class ForgotPasswordDto { public string Email { get; set; } = null!; }
     public class VerifyCodeDto { public string Email { get; set; } = null!; public string Code { get; set; } = null!; }
-    public class ResetPasswordDto { public string Email { get; set; } = null!; public string NewPassword { get; set; } = null!; }
+    public class ResetPasswordDto { public string Email { get; set; } = null!; public string Code { get; set; } = null!; public string NewPassword { get; set; } = null!; }
 }

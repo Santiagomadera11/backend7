@@ -14,7 +14,6 @@ namespace Syspharma.Business.Services
         Task<bool> CambiarEstado(int id, bool estado);
         Task<bool> Eliminar(int id);
         Task<List<ProductoDto>> ProximosAVencer(int dias);
-        Task<List<ProductoPublicoDto>> ObtenerCatalogoPublico();
     }
 
     public class ProductoService : IProductoService
@@ -33,6 +32,5 @@ namespace Syspharma.Business.Services
         public Task<bool> CambiarEstado(int id, bool estado) => _repository.CambiarEstado(id, estado);
         public Task<bool> Eliminar(int id) => _repository.Eliminar(id);
         public Task<List<ProductoDto>> ProximosAVencer(int dias) => _repository.ProximosAVencer(dias);
-        public Task<List<ProductoPublicoDto>> ObtenerCatalogoPublico() => _repository.ObtenerCatalogoPublico();
     }
 }

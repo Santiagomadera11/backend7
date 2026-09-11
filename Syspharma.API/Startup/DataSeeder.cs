@@ -113,17 +113,6 @@ namespace Syspharma.API.Startup
                 );
             }
 
-            if (!await context.EstadosPedidos.AnyAsync())
-            {
-                context.EstadosPedidos.AddRange(
-                    new EstadosPedido { Nombre = "Pendiente" },    // id 1
-                    new EstadosPedido { Nombre = "En proceso" },   // id 2
-                    new EstadosPedido { Nombre = "Listo" },        // id 3
-                    new EstadosPedido { Nombre = "Entregado" },    // id 4
-                    new EstadosPedido { Nombre = "Cancelado" }     // id 5
-                );
-            }
-
             if (!await context.EstadosDevoluciones.AnyAsync())
             {
                 context.EstadosDevoluciones.AddRange(
@@ -210,8 +199,7 @@ namespace Syspharma.API.Startup
             {
                 context.Roles.AddRange(
                     new Role { Nombre = "Administrador", Descripcion = "Acceso total al sistema", Estado = true, FechaCreacion = DateTime.Now },
-                    new Role { Nombre = "Empleado", Descripcion = "Personal operativo", Estado = true, FechaCreacion = DateTime.Now },
-                    new Role { Nombre = "Cliente", Descripcion = "Usuario cliente registrado desde la web", Estado = true, FechaCreacion = DateTime.Now }
+                    new Role { Nombre = "Empleado", Descripcion = "Personal operativo", Estado = true, FechaCreacion = DateTime.Now }
                 );
                 await context.SaveChangesAsync();
             }
@@ -273,13 +261,6 @@ namespace Syspharma.API.Startup
             ("sales.return", "Devolución", "Ventas"),
             ("sales.invoice", "Generar factura", "Ventas"),
             ("sales.export", "Exportar ventas", "Ventas"),
-
-            ("orders.view", "Ver pedidos", "Pedidos"),
-            ("orders.create", "Agregar pedido", "Pedidos"),
-            ("orders.edit", "Editar pedido", "Pedidos"),
-            ("orders.delete", "Eliminar pedido", "Pedidos"),
-            ("orders.status", "Cambiar estado", "Pedidos"),
-            ("orders.export", "Exportar pedidos", "Pedidos"),
 
             ("services.view", "Ver servicios", "Servicios"),
             ("services.create", "Agregar servicio", "Servicios"),

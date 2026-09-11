@@ -24,11 +24,11 @@ namespace Syspharma.Data.Repositories
         {
             Id = d.Id,
             VentaId = d.VentaId,
-            NumeroVenta = d.Venta?.NumeroVenta,
+            NumeroVenta = d.Venta?.NumeroVenta ?? "",
             UsuarioId = d.UsuarioId,
-            UsuarioNombre = d.Usuario?.Nombre,
+            UsuarioNombre = d.Usuario?.Nombre ?? "",
             EstadoId = d.EstadoId,
-            EstadoNombre = d.Estado?.Nombre,
+            EstadoNombre = d.Estado?.Nombre ?? "",
             Motivo = d.Motivo,
             Observaciones = d.Observaciones,
             TotalDevolucion = d.TotalDevolucion,
@@ -40,7 +40,7 @@ namespace Syspharma.Data.Repositories
                 Id = det.Id,
                 DetalleVentaId = det.DetalleVentaId,
                 ProductoId = det.ProductoId,
-                ProductoNombre = det.Producto?.Nombre,
+                ProductoNombre = det.Producto?.Nombre ?? "",
                 CantidadDevuelta = det.CantidadDevuelta,
                 PrecioUnitario = det.PrecioUnitario,
                 SubtotalDevuelto = det.SubtotalDevuelto ?? 0
