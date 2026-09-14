@@ -32,10 +32,10 @@ namespace Syspharma.Data.Repositories
                     Id = h.Id,
                     MedicoId = h.MedicoId,
                     DiaSemana = h.DiaSemana,
-                    MananaInicio = h.MananaInicio.HasValue ? h.MananaInicio.Value.ToString(@"hh\:mm") : "",
-                    MananaFin = h.MananaFin.HasValue ? h.MananaFin.Value.ToString(@"hh\:mm") : "",
-                    TardeInicio = h.TardeInicio.HasValue ? h.TardeInicio.Value.ToString(@"hh\:mm") : "",
-                    TardeFin = h.TardeFin.HasValue ? h.TardeFin.Value.ToString(@"hh\:mm") : ""
+                    MananaInicio = h.MananaInicio.HasValue ? h.MananaInicio.Value.ToString(@"HH\:mm") : "",
+                    MananaFin = h.MananaFin.HasValue ? h.MananaFin.Value.ToString(@"HH\:mm") : "",
+                    TardeInicio = h.TardeInicio.HasValue ? h.TardeInicio.Value.ToString(@"HH\:mm") : "",
+                    TardeFin = h.TardeFin.HasValue ? h.TardeFin.Value.ToString(@"HH\:mm") : ""
                 }).ToListAsync();
 
         public async Task GuardarHorario(int medicoId, List<HorarioItemDto> horarios)
@@ -124,15 +124,29 @@ namespace Syspharma.Data.Repositories
             if (bloqueado) return new List<string>();
 
             var slots = new List<string>();
-            
-            var mananaInicioStr = horario.MananaInicio.HasValue ? horario.MananaInicio.Value.ToString(@"hh\:mm") : "";
-            var mananaFinStr = horario.MananaFin.HasValue ? horario.MananaFin.Value.ToString(@"hh\:mm") : "";
-            var tardeInicioStr = horario.TardeInicio.HasValue ? horario.TardeInicio.Value.ToString(@"hh\:mm") : "";
-            var tardeFinStr = horario.TardeFin.HasValue ? horario.TardeFin.Value.ToString(@"hh\:mm") : "";
+
+            // "HH" (24 horas), no "hh" (12 horas): TimeOnly.ToString("hh") descarta AM/PM y
+            // convierte, p.ej., las 14:00 en "02:00" — corrompiendo todos los horarios de la
+            // tarde, tanto en los slots generados como (más abajo) en las horas ya ocupadas.
+            var mananaInicioStr = horario.MananaInicio.HasValue ? horario.MananaInicio.Value.ToString(@"HH\:mm") : "";
+            var mananaFinStr = horario.MananaFin.HasValue ? horario.MananaFin.Value.ToString(@"HH\:mm") : "";
+            var tardeInicioStr = horario.TardeInicio.HasValue ? horario.TardeInicio.Value.ToString(@"HH\:mm") : "";
+            var tardeFinStr = horario.TardeFin.HasValue ? horario.TardeFin.Value.ToString(@"HH\:mm") : "";
 
             slots.AddRange(GenerarSlots(mananaInicioStr, mananaFinStr));
             slots.AddRange(GenerarSlots(tardeInicioStr, tardeFinStr));
-            return slots;
+
+            // Excluir horas ya ocupadas por otra cita de este médico ese mismo día. Antes esto
+            // no se revisaba: el selector podía mostrar como "disponible" una hora en la que ya
+            // había otro paciente agendado, permitiendo doble-reservar. "Cancelada" y "No
+            // Asistió" liberan el horario porque esa cita ya no va a ocurrir.
+            var horasOcupadas = await _context.Citas
+                .Where(c => c.MedicoId == medicoId && c.Fecha == fecha && c.EstadoId != 5 && c.EstadoId != 6)
+                .Select(c => c.Hora)
+                .ToListAsync();
+            var horasOcupadasStr = horasOcupadas.Select(h => h.ToString(@"HH\:mm")).ToHashSet();
+
+            return slots.Where(s => !horasOcupadasStr.Contains(s)).ToList();
         }
 
         private static List<string> GenerarSlots(string inicio, string fin)

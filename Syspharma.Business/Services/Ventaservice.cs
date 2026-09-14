@@ -141,20 +141,6 @@ namespace Syspharma.Business.Services
 
                         var unidadesADescontar = d.Cantidad * factor;
 
-                        _context.VentaDetalles.Add(new VentaDetalle
-                        {
-                            VentaId = venta.Id,
-                            ProductoId = d.ProductoId,
-                            Cantidad = d.Cantidad,
-                            PrecioUnitario = d.PrecioUnitario,
-                            Descuento = d.Descuento,
-                            Subtotal = (d.Cantidad * d.PrecioUnitario) - d.Descuento,
-                            LoteId = d.LoteId,
-                            FormaVentaId = formaVenta?.Id,
-                            FormaVentaTipo = formaVenta?.Tipo,
-                            FactorUnidades = factor
-                        });
-
                         var producto = await _context.Productos.FindAsync(d.ProductoId);
                         if (producto != null)
                         {
@@ -164,16 +150,81 @@ namespace Syspharma.Business.Services
                             producto.UltimaActualizacion = DateTime.Now;
                         }
 
-                        if (d.LoteId.HasValue && d.LoteId.Value > 0)
+                        // Si el cliente indicó un lote específico, se respeta esa elección.
+                        // Si no, se aplica FEFO (First-Expired-First-Out): se descuenta primero
+                        // de los lotes que vencen antes, para que el producto próximo a vencer
+                        // salga primero del inventario. Cada lote realmente tocado queda
+                        // registrado en VentaDetalleLote con su cantidad exacta, para poder
+                        // revertir la venta con precisión (una sola línea puede repartirse
+                        // entre varios lotes).
+                        var detalleEntity = new VentaDetalle
                         {
-                            var lote = await _context.Lotes.FindAsync(d.LoteId.Value);
+                            VentaId = venta.Id,
+                            ProductoId = d.ProductoId,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            Descuento = d.Descuento,
+                            Subtotal = (d.Cantidad * d.PrecioUnitario) - d.Descuento,
+                            FormaVentaId = formaVenta?.Id,
+                            FormaVentaTipo = formaVenta?.Tipo,
+                            FactorUnidades = factor
+                        };
+
+                        int? loteIdAsignado = d.LoteId;
+
+                        var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
+
+                        if (loteIdAsignado.HasValue && loteIdAsignado.Value > 0)
+                        {
+                            var lote = await _context.Lotes.FindAsync(loteIdAsignado.Value);
                             if (lote != null)
                             {
+                                if (lote.FechaVencimiento < hoyDateOnly)
+                                    throw new Exception($"No se puede vender del lote '{lote.NumeroLote}' de '{producto?.Nombre ?? "Producto"}': está vencido desde {lote.FechaVencimiento:yyyy-MM-dd}.");
                                 if (lote.Cantidad < unidadesADescontar)
                                     throw new Exception($"Stock insuficiente en el lote '{lote.NumeroLote}' para '{producto?.Nombre ?? "Producto"}'. Disponible: {lote.Cantidad}, solicitado: {unidadesADescontar}.");
                                 lote.Cantidad -= unidadesADescontar;
+                                detalleEntity.Lotes.Add(new VentaDetalleLote { LoteId = lote.Id, Cantidad = unidadesADescontar });
                             }
                         }
+                        else
+                        {
+                            var lotesActivos = await _context.Lotes
+                                .Where(l => l.ProductoId == d.ProductoId
+                                            && l.Cantidad > 0
+                                            && l.FechaVencimiento >= hoyDateOnly)
+                                .OrderBy(l => l.FechaVencimiento)
+                                .ToListAsync();
+
+                            var pendiente = unidadesADescontar;
+                            foreach (var lote in lotesActivos)
+                            {
+                                if (pendiente <= 0) break;
+                                var aDescontar = Math.Min(lote.Cantidad, pendiente);
+                                lote.Cantidad -= aDescontar;
+                                pendiente -= aDescontar;
+                                detalleEntity.Lotes.Add(new VentaDetalleLote { LoteId = lote.Id, Cantidad = aDescontar });
+                                loteIdAsignado ??= lote.Id;
+                            }
+
+                            if (pendiente > 0)
+                            {
+                                // Si el producto no tiene NINGÚN lote registrado (no es
+                                // medicamento, o nunca se trazó por lote), no hay nada contra
+                                // qué comparar: el contador plano Producto.Stock manda solo.
+                                // Pero si SÍ tiene lotes y aun así no alcanzó lo vigente, la
+                                // diferencia son unidades vencidas — no se pueden vender.
+                                var tieneLotesRegistrados = await _context.Lotes.AnyAsync(l => l.ProductoId == d.ProductoId);
+                                if (tieneLotesRegistrados)
+                                    throw new Exception($"No se puede vender '{producto?.Nombre ?? "el producto"}': faltan {pendiente} unidades de stock vigente (no vencido). El resto del inventario registrado está vencido.");
+                            }
+                        }
+
+                        // LoteId queda como referencia rápida al primer lote tocado (para
+                        // mostrar en pantalla); la fuente de verdad para revertir es Lotes.
+                        detalleEntity.LoteId = loteIdAsignado;
+
+                        _context.VentaDetalles.Add(detalleEntity);
                     }
                 }
 
@@ -195,8 +246,27 @@ namespace Syspharma.Business.Services
                             Cantidad = s.Cantidad,
                             PrecioUnitario = s.PrecioUnitario,
                             Descuento = s.Descuento,
-                            Subtotal = (s.Cantidad * s.PrecioUnitario) - s.Descuento
+                            Subtotal = (s.Cantidad * s.PrecioUnitario) - s.Descuento,
+                            CitaId = s.CitaId
                         });
+
+                        // Si el servicio vendido corresponde a una cita agendada, marcarla
+                        // como pagada y vincularla a esta venta. Este paso existía en el
+                        // repositorio de ventas viejo (sin usar en el flujo real) pero nunca
+                        // se portó a este servicio, que es el que realmente procesa las
+                        // ventas: las citas cobradas se quedaban para siempre en su estado
+                        // anterior (pendiente/confirmada) sin registrar el pago.
+                        if (s.CitaId.HasValue && s.CitaId.Value > 0)
+                        {
+                            var cita = await _context.Citas.FindAsync(s.CitaId.Value);
+                            if (cita != null)
+                            {
+                                cita.VentaId = venta.Id;
+                                var estadoPagada = await _context.EstadosCita.FirstOrDefaultAsync(e => e.Nombre == "Pagada");
+                                if (estadoPagada != null)
+                                    cita.EstadoId = estadoPagada.Id;
+                            }
+                        }
                     }
                 }
 
@@ -232,6 +302,14 @@ namespace Syspharma.Business.Services
                 .Include(v => v.VentaDetallesServicios)
                 .FirstOrDefaultAsync(v => v.Id == id);
             if (v == null) return false;
+
+            // Solo se puede borrar físicamente una venta que ya fue anulada: Anular() ya
+            // revirtió su stock, sus lotes y el total del turno correctamente. Borrar una
+            // venta activa destruiría el registro sin devolver nada de eso, perdiendo esas
+            // unidades del inventario para siempre y sin dejar ningún rastro de qué pasó.
+            if (v.EstadoId != 3)
+                throw new Exception("Solo se puede eliminar una venta que ya fue anulada. Anúlala primero para revertir su stock, sus lotes y su efecto en el turno.");
+
             _context.VentaDetalles.RemoveRange(v.VentaDetalles);
             _context.VentaDetalleServicios.RemoveRange(v.VentaDetallesServicios);
             _context.Ventas.Remove(v);
@@ -249,6 +327,16 @@ namespace Syspharma.Business.Services
         {
             var v = await _context.Ventas.FindAsync(id);
             if (v == null) return false;
+
+            // "Anulada" (3) y "Devolución" (2) tienen efectos reales de stock/lotes que
+            // solo Anular() y el módulo de Devoluciones saben aplicar correctamente
+            // (reversión de Producto.Stock y Lote.Cantidad). Cambiar el estado acá
+            // directamente saltaría esa lógica y dejaría el inventario desincronizado.
+            if (estadoId == 3 || v.EstadoId == 3)
+                throw new Exception("Para anular o reactivar una venta anulada, usa el endpoint de anulación, no este.");
+            if (estadoId == 2 || v.EstadoId == 2)
+                throw new Exception("El estado 'Devolución' solo cambia a través del módulo de Devoluciones.");
+
             v.EstadoId = estadoId;
             await _context.SaveChangesAsync();
             return true;
@@ -257,7 +345,8 @@ namespace Syspharma.Business.Services
         public async Task<bool> Anular(int id)
         {
             var venta = await _context.Ventas
-                .Include(v => v.VentaDetalles)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes)
+                .Include(v => v.VentaDetallesServicios)
                 .Include(v => v.Turno)
                 .FirstOrDefaultAsync(v => v.Id == id)
                 ?? throw new Exception("La venta no existe.");
@@ -267,6 +356,13 @@ namespace Syspharma.Business.Services
 
             if (venta.EstadoId == 2)
                 throw new Exception("No se puede anular una venta con devolución aprobada.");
+
+            // Si el turno de esta venta ya se cerró, su "Diferencia" (cuadre de caja) ya
+            // quedó calculada y auditada con el TotalVentas de ese momento. Anular acá
+            // restaría del total sin recalcular esa diferencia, dejando el cuadre histórico
+            // desactualizado sin que nadie se entere.
+            if (venta.Turno != null && venta.Turno.Estado.Contains("cerrado"))
+                throw new Exception("No se puede anular esta venta: pertenece a un turno que ya fue cerrado y su cuadre de caja ya quedó registrado.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -285,9 +381,53 @@ namespace Syspharma.Business.Services
                         producto.Stock += detalle.Cantidad * detalle.FactorUnidades;
                         producto.UltimaActualizacion = DateTime.Now;
                     }
+
+                    if (detalle.Lotes != null && detalle.Lotes.Any())
+                    {
+                        // Fuente de verdad: restaura exactamente lo que salió de cada lote,
+                        // incluso si la línea se repartió entre varios.
+                        foreach (var detalleLote in detalle.Lotes)
+                        {
+                            var lote = await _context.Lotes.FindAsync(detalleLote.LoteId);
+                            if (lote != null)
+                                lote.Cantidad += detalleLote.Cantidad;
+                        }
+                    }
+                    else if (detalle.LoteId.HasValue)
+                    {
+                        // Compatibilidad con ventas registradas antes de este cambio, que solo
+                        // guardaban un LoteId único sin desglose por VentaDetalleLote.
+                        var lote = await _context.Lotes.FindAsync(detalle.LoteId.Value);
+                        if (lote != null)
+                            lote.Cantidad += detalle.Cantidad * detalle.FactorUnidades;
+                    }
                 }
 
-                // 3. Restar del turno
+                // 3. Revertir citas pagadas por esta venta: vuelven a "Completada" (el
+                // estado natural justo antes de cobrarse) y se desvinculan de la venta. Si
+                // no se revierte esto, una cita queda "Pagada" para siempre aunque la venta
+                // que la pagó se haya anulado.
+                if (venta.VentaDetallesServicios != null)
+                {
+                    var citaIds = venta.VentaDetallesServicios
+                        .Where(s => s.CitaId.HasValue)
+                        .Select(s => s.CitaId!.Value)
+                        .Distinct()
+                        .ToList();
+
+                    if (citaIds.Any())
+                    {
+                        var estadoCompletada = await _context.EstadosCita.FirstOrDefaultAsync(e => e.Nombre == "Completada");
+                        var citas = await _context.Citas.Where(c => citaIds.Contains(c.Id)).ToListAsync();
+                        foreach (var cita in citas)
+                        {
+                            cita.VentaId = null;
+                            if (estadoCompletada != null) cita.EstadoId = estadoCompletada.Id;
+                        }
+                    }
+                }
+
+                // 4. Restar del turno
                 if (venta.Turno != null)
                 {
                     venta.Turno.TotalVentas -= venta.Total;

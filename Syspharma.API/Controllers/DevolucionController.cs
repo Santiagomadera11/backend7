@@ -29,6 +29,10 @@ namespace Syspharma.API.Controllers
             return result == null ? NotFound(new { message = "No hay devolución para esta venta" }) : Ok(result);
         }
 
+        [HttpGet("mermas")]
+        public async Task<IActionResult> ObtenerMermas([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta) =>
+            Ok(await _service.ObtenerMermas(desde, hasta));
+
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerPorId(int id)
         {

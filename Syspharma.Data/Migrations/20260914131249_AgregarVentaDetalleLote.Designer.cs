@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Syspharma.Data.Context;
 
@@ -11,9 +12,11 @@ using Syspharma.Data.Context;
 namespace Syspharma.Data.Migrations
 {
     [DbContext(typeof(SyspharmaContext))]
-    partial class SyspharmaContextModelSnapshot : ModelSnapshot
+    [Migration("20260914131249_AgregarVentaDetalleLote")]
+    partial class AgregarVentaDetalleLote
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -518,12 +521,6 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("productoId");
 
-                    b.Property<bool>("Reingresa")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true)
-                        .HasColumnName("reingresa");
-
                     b.Property<decimal?>("SubtotalDevuelto")
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("subtotalDevuelto");
@@ -538,35 +535,6 @@ namespace Syspharma.Data.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("DetallesDevoluciones", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.DetalleDevolucionLote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int")
-                        .HasColumnName("cantidad");
-
-                    b.Property<int>("DetalleDevolucionId")
-                        .HasColumnType("int")
-                        .HasColumnName("detalleDevolucionId");
-
-                    b.Property<int>("LoteId")
-                        .HasColumnType("int")
-                        .HasColumnName("loteId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DetalleDevolucionId");
-
-                    b.HasIndex("LoteId");
-
-                    b.ToTable("detalle_devolucion_lotes", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Devolucion", b =>
@@ -2425,27 +2393,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Producto");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.DetalleDevolucionLote", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.DetalleDevolucion", "DetalleDevolucion")
-                        .WithMany("Lotes")
-                        .HasForeignKey("DetalleDevolucionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_DetalleDevolucionLotes_DetallesDevolucion");
-
-                    b.HasOne("Syspharma.Data.Entities.Lote", "Lote")
-                        .WithMany()
-                        .HasForeignKey("LoteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_DetalleDevolucionLotes_Lotes");
-
-                    b.Navigation("DetalleDevolucion");
-
-                    b.Navigation("Lote");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Devolucion", b =>
                 {
                     b.HasOne("Syspharma.Data.Entities.EstadoDevolucion", "Estado")
@@ -2825,11 +2772,6 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Syspharma.Data.Entities.Compra", b =>
                 {
                     b.Navigation("CompraDetalles");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.DetalleDevolucion", b =>
-                {
-                    b.Navigation("Lotes");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Devolucion", b =>

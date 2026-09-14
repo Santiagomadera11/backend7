@@ -87,9 +87,20 @@ namespace Syspharma.Data.Repositories
         {
             var turno = await _context.Turnos.FindAsync(dto.Id);
             if (turno == null) throw new Exception("Turno no encontrado");
+            if (turno.Estado.Contains("cerrado"))
+                throw new Exception("Este turno ya fue cerrado.");
+
             turno.Estado = "cerrado";
             turno.FechaCierre = DateTime.Now;
             turno.MontoFinal = dto.MontoFinal;
+
+            // Se calcula acá, con la fuente de verdad del turno (no con lo que mande el
+            // cliente): antes el frontend calculaba la diferencia pero nunca la enviaba, y
+            // el DTO ni siquiera tenía el campo — el historial de cuadre de caja siempre
+            // mostraba null/0 para "Diferencia".
+            var saldoEsperado = turno.MontoBase + turno.TotalVentas - turno.TotalGastos;
+            turno.Diferencia = dto.MontoFinal - saldoEsperado;
+
             await _context.SaveChangesAsync();
             return MapDto(turno);
         }

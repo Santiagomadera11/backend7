@@ -34,4 +34,6 @@ public partial class VentaDetalle
     public virtual Venta Venta { get; set; } = null!;
 
     public virtual ProductoFormaVenta? FormaVenta { get; set; }
+
+    public virtual ICollection<VentaDetalleLote> Lotes { get; set; } = new List<VentaDetalleLote>();
 }
