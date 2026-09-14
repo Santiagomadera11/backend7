@@ -34,6 +34,7 @@ namespace Syspharma.Domain.DTOs
         public int CantidadDevuelta { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal SubtotalDevuelto { get; set; }
+        public bool Reingresa { get; set; }
     }
 
     public class DevolucionCreateDto
@@ -69,6 +70,10 @@ namespace Syspharma.Domain.DTOs
         [Required(ErrorMessage = "La cantidad a devolver es obligatoria.")]
         [Range(1, int.MaxValue, ErrorMessage = "La cantidad a devolver debe ser mayor o igual a 1.")]
         public int CantidadDevuelta { get; set; }
+
+        // Si es false (dañado/vencido), el producto no reingresa al stock vendible al
+        // aprobar la devolución. Default true: se asume vendible salvo que se indique lo contrario.
+        public bool Reingresa { get; set; } = true;
     }
 
     public class DevolucionGestionarDto
@@ -87,5 +92,24 @@ namespace Syspharma.Domain.DTOs
         public int Id { get; set; }
         public string Nombre { get; set; } = "";
         public bool Activo { get; set; }
+    }
+
+    // Una línea de devolución aprobada marcada como "no reingresa" (dañado/vencido):
+    // representa una pérdida real de inventario que no vuelve a ser vendible.
+    public class MermaDto
+    {
+        public int DetalleDevolucionId { get; set; }
+        public int DevolucionId { get; set; }
+        public int VentaId { get; set; }
+        public string NumeroVenta { get; set; } = "";
+        public int ProductoId { get; set; }
+        public string ProductoNombre { get; set; } = "";
+        public int CantidadPerdida { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal ValorPerdida { get; set; }
+        public string Motivo { get; set; } = "";
+        public string? Observaciones { get; set; }
+        public DateTime FechaGestion { get; set; }
+        public string UsuarioGestionNombre { get; set; } = "";
     }
 }

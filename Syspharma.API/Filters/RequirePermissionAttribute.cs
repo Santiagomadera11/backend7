@@ -44,7 +44,11 @@ namespace Syspharma.API.Filters
                         .ThenInclude(rp => rp.Permiso)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
-            if (usuario == null)
+            // Se consulta el usuario fresco de la BD en cada request (por eso un cambio de
+            // ROL sí se aplica de inmediato), pero nunca se revisaba si sigue Activo: un
+            // usuario desactivado mantenía acceso completo con su token vigente hasta que
+            // expirara (hasta 60 min por defecto), en vez de perderlo al instante.
+            if (usuario == null || !usuario.Estado)
             {
                 context.Result = new UnauthorizedResult();
                 return;

@@ -61,6 +61,10 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
 
     public virtual DbSet<Lote> Lotes { get; set; }
 
+    public virtual DbSet<VentaDetalleLote> VentaDetalleLotes { get; set; }
+
+    public virtual DbSet<DetalleDevolucionLote> DetalleDevolucionLotes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -580,6 +584,28 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.HasOne(d => d.FormaVenta).WithMany().HasForeignKey(d => d.FormaVentaId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_VentaDetalles_ProductoFormaVenta");
         });
 
+        // Registra, por línea de venta, exactamente cuántas unidades salieron de cada lote
+        // (una venta con FEFO puede repartir una misma línea entre varios lotes).
+        modelBuilder.Entity<VentaDetalleLote>(entity =>
+        {
+            entity.ToTable("venta_detalle_lotes");
+            entity.Property(e => e.VentaDetalleId).HasColumnName("ventaDetalleId");
+            entity.Property(e => e.LoteId).HasColumnName("loteId");
+            entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+
+            entity.HasOne(d => d.VentaDetalle)
+                .WithMany(p => p.Lotes)
+                .HasForeignKey(d => d.VentaDetalleId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_VentaDetalleLotes_VentaDetalles");
+
+            entity.HasOne(d => d.Lote)
+                .WithMany()
+                .HasForeignKey(d => d.LoteId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_VentaDetalleLotes_Lotes");
+        });
+
         modelBuilder.Entity<VentaDetalleServicio>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__venta_detalles_servicios");
@@ -761,6 +787,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.CantidadDevuelta).HasColumnName("cantidadDevuelta");
             entity.Property(e => e.PrecioUnitario).HasColumnType("decimal(18, 2)").HasColumnName("precioUnitario");
             entity.Property(e => e.SubtotalDevuelto).HasColumnType("decimal(18, 2)").HasColumnName("subtotalDevuelto");
+            entity.Property(e => e.Reingresa).HasDefaultValue(true).HasColumnName("reingresa");
 
             entity.HasOne(d => d.Devolucion)
                 .WithMany(d => d.Detalles)
@@ -837,6 +864,29 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("nombre");
             entity.Property(e => e.Activo).HasColumnName("activo");
+        });
+
+        // Registra, por línea de devolución, exactamente a qué lote(s) se le devolvió
+        // cantidad (una devolución puede repartirse entre los mismos lotes de los que
+        // salió la venta original).
+        modelBuilder.Entity<DetalleDevolucionLote>(entity =>
+        {
+            entity.ToTable("detalle_devolucion_lotes");
+            entity.Property(e => e.DetalleDevolucionId).HasColumnName("detalleDevolucionId");
+            entity.Property(e => e.LoteId).HasColumnName("loteId");
+            entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+
+            entity.HasOne(d => d.DetalleDevolucion)
+                .WithMany(p => p.Lotes)
+                .HasForeignKey(d => d.DetalleDevolucionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_DetalleDevolucionLotes_DetallesDevolucion");
+
+            entity.HasOne(d => d.Lote)
+                .WithMany()
+                .HasForeignKey(d => d.LoteId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_DetalleDevolucionLotes_Lotes");
         });
 
         OnModelCreatingPartial(modelBuilder);

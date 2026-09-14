@@ -115,23 +115,34 @@ namespace Syspharma.API.Controllers
                 var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
                 var limiteDateOnly = hoyDateOnly.AddDays(diasLimite);
 
-                var productos = await _context.Productos
-                    .Where(p => p.Estado &&
-                                p.FechaVencimientoProxima != null &&
-                                p.FechaVencimientoProxima <= limiteDateOnly &&
-                                p.FechaVencimientoProxima >= hoyDateOnly)
-                    .Select(p => new
+                // Se calcula en vivo a partir de los Lotes reales. La columna
+                // Producto.FechaVencimientoProxima nunca se actualiza en ningún flujo de
+                // escritura (crear/actualizar producto, recibir compra, vender), así que
+                // quedaba siempre en null y este endpoint nunca devolvía nada.
+                var items = await _context.Lotes
+                    .Where(l => l.Producto.Estado &&
+                                l.Cantidad > 0 &&
+                                l.FechaVencimiento <= limiteDateOnly)
+                    .Select(l => new
                     {
-                        p.Id,
-                        p.Nombre,
-                        p.Stock,
-                        FechaVencimiento = p.FechaVencimientoProxima,
-                        DiasRestantes = EF.Functions.DateDiffDay(hoyDateOnly, p.FechaVencimientoProxima!.Value)
+                        LoteId = l.Id,
+                        l.ProductoId,
+                        ProductoNombre = l.Producto.Nombre,
+                        l.NumeroLote,
+                        FechaVencimiento = l.FechaVencimiento,
+                        CantidadDisponible = l.Cantidad,
+                        DiasRestantes = EF.Functions.DateDiffDay(hoyDateOnly, l.FechaVencimiento)
                     })
-                    .OrderBy(p => p.FechaVencimiento)
+                    .OrderBy(l => l.FechaVencimiento)
                     .ToListAsync();
 
-                return Ok(productos);
+                return Ok(new
+                {
+                    diasAlerta = diasLimite,
+                    vencidos = items.Count(i => i.DiasRestantes < 0),
+                    porVencer = items.Count(i => i.DiasRestantes >= 0),
+                    items
+                });
             }
             catch (Exception ex)
             {

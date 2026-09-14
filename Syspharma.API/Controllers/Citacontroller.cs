@@ -56,16 +56,29 @@ namespace Syspharma.API.Controllers
         [HttpPatch("{id}/estado")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] int estadoId)
         {
-            var res = await _service.CambiarEstado(id, estadoId);
-            return res ? Ok(new { message = "Estado actualizado" }) : NotFound();
+            try
+            {
+                var res = await _service.CambiarEstado(id, estadoId);
+                return res ? Ok(new { message = "Estado actualizado" }) : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Eliminar(int id)
         {
-            var res = await _service.Eliminar(id);
-            return res ? Ok(new { message = "Cita eliminada correctamente" }) : NotFound();
+            try
+            {
+                var res = await _service.Eliminar(id);
+                return res ? Ok(new { message = "Cita eliminada correctamente" }) : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

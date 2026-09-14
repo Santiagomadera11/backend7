@@ -92,6 +92,16 @@ namespace Syspharma.Data.Repositories
             if (fechaHoraCita <= horaActualColombia)
                 throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
 
+            // El selector de horarios (ObtenerSlots) ya oculta las horas ocupadas, pero eso es
+            // solo la UI — sin este chequeo acá, dos solicitudes casi simultáneas (o una llamada
+            // directa a la API) podían agendar dos pacientes con el mismo médico a la misma hora.
+            // "Cancelada"/"No Asistió" no cuentan porque liberan el horario.
+            var yaOcupado = await _context.Citas.AnyAsync(c =>
+                c.MedicoId == dto.MedicoId && c.Fecha == fechaCita && c.Hora == horaCita &&
+                c.EstadoId != 5 && c.EstadoId != 6);
+            if (yaOcupado)
+                throw new Exception("Ya existe una cita agendada con este médico en esa fecha y hora.");
+
             // --- NUEVO: Buscamos el servicio asociado para guardar su precio y nombre histórico ---
             var servicio = await _context.Servicios.FindAsync(dto.ServicioId);
             decimal? precioServicio = servicio?.Precio;
@@ -124,29 +134,62 @@ namespace Syspharma.Data.Repositories
 
         public async Task<CitaDto> Actualizar(CitaUpdateDto dto)
         {
+            var cita = await _context.Citas.FindAsync(dto.Id) ?? throw new Exception("No existe");
+
             var fechaCita = DateOnly.Parse(dto.Fecha);
             var horaCita = TimeOnly.Parse(dto.Hora);
-            var fechaHoraCita = fechaCita.ToDateTime(horaCita);
 
-            TimeZoneInfo colombiaZone;
-            try
+            // Solo se valida "no puede ser pasado" si realmente se está reprogramando
+            // (fecha/hora distintas a las que ya tenía). Antes se exigía siempre, así que
+            // era imposible editar cualquier otro campo (teléfono, notas, servicio) de una
+            // cita cuya fecha ya pasó naturalmente.
+            if (fechaCita != cita.Fecha || horaCita != cita.Hora)
             {
-                colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+                var fechaHoraCita = fechaCita.ToDateTime(horaCita);
+
+                TimeZoneInfo colombiaZone;
+                try
+                {
+                    colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+                }
+                catch (TimeZoneNotFoundException)
+                {
+                    colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+                }
+
+                var horaActualColombia = TimeZoneInfo.ConvertTime(DateTime.UtcNow, colombiaZone);
+
+                if (fechaHoraCita <= horaActualColombia)
+                    throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
+
+                // Igual que en Crear: bloquear reprogramar hacia una hora que ya tiene otra
+                // cita agendada con ese médico.
+                var yaOcupado = await _context.Citas.AnyAsync(c =>
+                    c.Id != dto.Id && c.MedicoId == dto.MedicoId && c.Fecha == fechaCita && c.Hora == horaCita &&
+                    c.EstadoId != 5 && c.EstadoId != 6);
+                if (yaOcupado)
+                    throw new Exception("Ya existe una cita agendada con este médico en esa fecha y hora.");
             }
-            catch (TimeZoneNotFoundException)
+
+            // Si cambia el servicio, se vuelve a tomar su precio/nombre histórico (igual
+            // que en Crear); si no cambia, se preservan los que ya tenía.
+            if (dto.ServicioId.HasValue && dto.ServicioId != cita.ServicioId)
             {
-                colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+                var servicio = await _context.Servicios.FindAsync(dto.ServicioId.Value);
+                cita.ServicioNombre = servicio?.Nombre;
+                cita.Precio = servicio?.Precio;
             }
 
-            var horaActualColombia = TimeZoneInfo.ConvertTime(DateTime.UtcNow, colombiaZone);
-
-            if (fechaHoraCita <= horaActualColombia)
-                throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
-
-            var cita = await _context.Citas.FindAsync(dto.Id) ?? throw new Exception("No existe");
-            cita.MedicoId = dto.MedicoId; cita.PacienteNombre = dto.PacienteNombre;
-            cita.EstadoId = dto.EstadoId; cita.Fecha = fechaCita;
+            cita.MedicoId = dto.MedicoId;
+            cita.PacienteNombre = dto.PacienteNombre;
+            cita.PacienteDocumento = dto.PacienteDocumento;
+            cita.PacienteTelefono = dto.PacienteTelefono;
+            cita.PacienteEmail = dto.PacienteEmail;
+            cita.ServicioId = dto.ServicioId;
+            cita.EstadoId = dto.EstadoId;
+            cita.Fecha = fechaCita;
             cita.Hora = horaCita;
+            cita.Notas = dto.Notas;
             await _context.SaveChangesAsync();
             return await ObtenerPorId(cita.Id) ?? throw new Exception("Error");
         }
@@ -155,6 +198,14 @@ namespace Syspharma.Data.Repositories
         {
             var c = await _context.Citas.FindAsync(id);
             if (c == null) return false;
+
+            // "Pagada" no se puede fijar a mano por acá: solo debe alcanzarse cuando
+            // VentaService.Crear procesa un cobro real (ver el vínculo Cita↔Venta). Si no,
+            // cualquiera podría marcar una cita como pagada sin que exista ninguna venta.
+            var estadoDestino = await _context.EstadosCita.FindAsync(estadoId);
+            if (estadoDestino != null && estadoDestino.Nombre == "Pagada" && c.VentaId == null)
+                throw new Exception("El estado 'Pagada' no se puede asignar manualmente: se marca automáticamente al cobrar la cita mediante una venta.");
+
             c.EstadoId = estadoId;
             await _context.SaveChangesAsync();
             return true;
@@ -164,6 +215,10 @@ namespace Syspharma.Data.Repositories
         {
             var c = await _context.Citas.FindAsync(id);
             if (c == null) return false;
+
+            if (c.VentaId.HasValue)
+                throw new Exception("No se puede eliminar una cita que ya fue pagada: perderías la trazabilidad de a qué cita corresponde esa venta.");
+
             _context.Citas.Remove(c);
             await _context.SaveChangesAsync();
             return true;

@@ -11,6 +11,7 @@ namespace Syspharma.Business.Services
         Task<DevolucionDto> Crear(DevolucionCreateDto dto);
         Task<DevolucionDto> Gestionar(int id, DevolucionGestionarDto dto);
         Task<List<EstadoDevolucionDto>> ObtenerEstados();
+        Task<List<MermaDto>> ObtenerMermas(DateTime? desde, DateTime? hasta);
     }
 
     public class DevolucionService : IDevolucionService
@@ -24,5 +25,6 @@ namespace Syspharma.Business.Services
         public Task<DevolucionDto> Crear(DevolucionCreateDto dto) => _repo.Crear(dto);
         public Task<DevolucionDto> Gestionar(int id, DevolucionGestionarDto dto) => _repo.Gestionar(id, dto);
         public Task<List<EstadoDevolucionDto>> ObtenerEstados() => _repo.ObtenerEstados();
+        public Task<List<MermaDto>> ObtenerMermas(DateTime? desde, DateTime? hasta) => _repo.ObtenerMermas(desde, hasta);
     }
 }

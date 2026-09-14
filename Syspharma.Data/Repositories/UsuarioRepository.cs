@@ -109,6 +109,14 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(u => u.Id == dto.Id);
             if (usuario == null) throw new Exception("Usuario no encontrado");
 
+            // Misma regla que CambiarEstado, pero esa protección vivía solo ahí: el
+            // formulario de edición también tiene un switch de Activo/Inactivo en el mismo
+            // modal donde se cambia el rol, así que este camino podía desactivar a un
+            // Administrador sin pasar por esa validación.
+            var esAdministrador = usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false;
+            if (!dto.Estado && esAdministrador)
+                throw new Exception("No se puede desactivar a un usuario con rol Administrador.");
+
             usuario.Nombre = dto.Nombre;
             usuario.Email = dto.Email;
             usuario.TipoDocumentoId = dto.TipoDocumentoId;
@@ -142,9 +150,16 @@ namespace Syspharma.Data.Repositories
 
         public async Task<bool> Eliminar(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
+            var usuario = await _context.Usuarios
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == id);
             if (usuario == null)
                 throw new Exception("Usuario no encontrado");
+
+            // Misma regla que CambiarEstado/Actualizar: no tocar a un Administrador por
+            // esta vía. Borrarlo físicamente es aún más definitivo que desactivarlo.
+            if (usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false)
+                throw new Exception("No se puede eliminar a un usuario con rol Administrador. Desactívalo primero si ya no debe tener acceso, o cámbiale el rol.");
 
             // ✅ CAMBIO 2: borrado físico en la base de datos
             _context.Usuarios.Remove(usuario);
