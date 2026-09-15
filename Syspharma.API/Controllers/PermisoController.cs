@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 namespace Syspharma.API.Controllers
 {
     [ApiController]
@@ -24,6 +25,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> Crear([FromBody] PermisoCreateDto dto)
         {
             try { return Ok(await _service.Crear(dto)); }
@@ -31,6 +33,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> Actualizar([FromBody] PermisoUpdateDto dto)
         {
             try { return Ok(await _service.Actualizar(dto)); }
@@ -38,6 +41,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> Eliminar(int id)
         {
             try { await _service.Eliminar(id); return Ok(new { message = "Permiso eliminado correctamente" }); }

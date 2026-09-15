@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -35,6 +36,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("config.document_types.create")]
         public async Task<IActionResult> Crear([FromBody] TipoDocumentoDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Nombre))
@@ -55,6 +57,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("config.document_types.edit")]
         public async Task<IActionResult> Actualizar([FromBody] TipoDocumentoUpdateDto dto)
         {
             var tipo = await _context.TiposDocumentos.FindAsync(dto.Id);
@@ -69,6 +72,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("config.document_types.edit")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             var tipo = await _context.TiposDocumentos.FindAsync(id);
@@ -79,6 +83,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("config.document_types.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             var tipo = await _context.TiposDocumentos.FindAsync(id);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -25,6 +26,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("appointments.doctors.create")]
         public async Task<IActionResult> Crear([FromBody] MedicoCreateDto dto)
         {
             try { return Ok(await _service.Crear(dto)); }
@@ -32,6 +34,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("appointments.doctors.edit")]
         public async Task<IActionResult> Actualizar([FromBody] MedicoUpdateDto dto)
         {
             try { return Ok(await _service.Actualizar(dto)); }
@@ -39,6 +42,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("appointments.doctors.status")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             try { await _service.CambiarEstado(id, estado); return Ok(new { message = "Estado actualizado" }); }
@@ -46,6 +50,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("appointments.doctors.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             try
