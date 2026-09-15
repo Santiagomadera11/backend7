@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -35,6 +36,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("config.payment_methods.create")]
         public async Task<IActionResult> Crear([FromBody] MetodoPagoDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Nombre))
@@ -55,6 +57,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("config.payment_methods.edit")]
         public async Task<IActionResult> Actualizar([FromBody] MetodoPagoUpdateDto dto)
         {
             var metodo = await _context.MetodosPagos.FindAsync(dto.Id);
@@ -69,6 +72,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("config.payment_methods.edit")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             var metodo = await _context.MetodosPagos.FindAsync(id);
@@ -79,6 +83,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("config.payment_methods.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             var metodo = await _context.MetodosPagos.FindAsync(id);

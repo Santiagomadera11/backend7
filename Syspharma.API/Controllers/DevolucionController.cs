@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -41,6 +42,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("sales.return")]
         public async Task<IActionResult> Crear([FromBody] DevolucionCreateDto dto)
         {
             try { return Ok(await _service.Crear(dto)); }
@@ -48,6 +50,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/gestionar")]
+        [RequirePermission("sales.return")]
         public async Task<IActionResult> Gestionar(int id, [FromBody] DevolucionGestionarDto dto)
         {
             try { return Ok(await _service.Gestionar(id, dto)); }
