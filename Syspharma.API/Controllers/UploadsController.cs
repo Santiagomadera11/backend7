@@ -29,10 +29,10 @@ namespace Syspharma.API.Controllers
             if (archivo == null || archivo.Length == 0)
                 return BadRequest(new { message = "No se envió ninguna imagen" });
 
-            var extensionesPermitidas = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var extensionesPermitidas = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif" };
             var extension = Path.GetExtension(archivo.FileName).ToLower();
             if (!extensionesPermitidas.Contains(extension))
-                return BadRequest(new { message = "Solo se permiten JPG, PNG o WEBP" });
+                return BadRequest(new { message = "Solo se permiten JPG, PNG, WEBP, GIF o AVIF" });
 
             // La carpeta la elige el llamador (ej: "productos"), pero siempre queda
             // bajo el namespace del proyecto para no mezclar assets de otras apps

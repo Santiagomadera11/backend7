@@ -43,6 +43,7 @@ namespace Syspharma.Data.Repositories
             EstadoNombre = v.Estado?.Nombre ?? "Completada",
             Subtotal = v.Subtotal,
             Iva = v.Iva,
+            PorcentajeIva = v.PorcentajeIva,
             Total = v.Total,
             FechaVenta = v.FechaVenta,
             Detalles = v.VentaDetalles?.Select(d => new VentaDetalleDto
@@ -112,6 +113,7 @@ namespace Syspharma.Data.Repositories
                     EstadoId = 1,
                     Subtotal = subtotalFinal,
                     Iva = iva,
+                    PorcentajeIva = dto.PorcentajeIva,
                     Total = totalFinal,
                     Notas = dto.Notas,
                     FechaVenta = DateTime.Now
@@ -119,6 +121,12 @@ namespace Syspharma.Data.Repositories
 
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
+
+                // El número definitivo se basa en el Id ya asignado por la BD, así queda
+                // corto y legible (VTA-00042) en vez del timestamp crudo de antes
+                // (20260917143557), que no se podía ni leer. Se persiste con el
+                // SaveChangesAsync de más abajo, no hace falta uno aparte.
+                venta.NumeroVenta = $"VTA-{venta.Id:D5}";
 
                 if (dto.Detalles != null)
                 {

@@ -141,6 +141,13 @@ namespace Syspharma.Data.Repositories
 
             _context.Compras.Add(compra);
             await _context.SaveChangesAsync();
+
+            // El número definitivo se basa en el Id ya asignado por la BD, así queda
+            // corto y legible (COM-00042) en vez del formato anterior con fecha+random
+            // (COM-20260917-7757), que era mucho más largo y no aportaba nada extra.
+            compra.NumeroCompra = $"COM-{compra.Id:D5}";
+            await _context.SaveChangesAsync();
+
             return await ObtenerPorId(compra.Id) ?? MapDto(compra);
         }
 
