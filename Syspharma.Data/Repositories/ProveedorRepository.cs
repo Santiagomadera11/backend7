@@ -120,9 +120,9 @@ namespace Syspharma.Data.Repositories
         {
             var p = await _context.Proveedores.FindAsync(id);
             if (p == null) throw new Exception("Proveedor no encontrado");
-            var tieneProductos = await _context.Productos.AnyAsync(prod => prod.ProveedorId == id);
-            if (tieneProductos)
-                throw new Exception("No se puede eliminar el proveedor porque tiene productos asociados");
+            var tieneCompras = await _context.Compras.AnyAsync(c => c.ProveedorId == id);
+            if (tieneCompras)
+                throw new Exception("No se puede eliminar el proveedor porque tiene compras asociadas");
             _context.Proveedores.Remove(p);
             await _context.SaveChangesAsync();
             return true;
