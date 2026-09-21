@@ -195,6 +195,18 @@ namespace Syspharma.Data.Repositories
                 // el producto nunca vuelve al inventario, y la venta no cambia de estado.
                 if (dto.NuevoEstado == 2)
                 {
+                    // El reembolso sale de la caja ACTUALMENTE ABIERTA de quien aprueba la
+                    // devolución, no de la caja de la venta original: esa puede haberse
+                    // cerrado hace mucho (su cuadre ya quedó registrado, igual que en
+                    // Anular) y la plata físicamente sale del cajón que está abierto ahora.
+                    // Todas las líneas de una devolución son de productos (nunca de
+                    // servicios), así que TotalDevolucion siempre es "solo productos" —
+                    // mismo criterio que ya usa Turno.TotalVentas al crear una venta.
+                    var turnoAprobador = await _context.Turnos
+                        .FirstOrDefaultAsync(t => t.UsuarioId == dto.UsuarioGestionId && t.Estado == "activo");
+                    if (turnoAprobador != null)
+                        turnoAprobador.TotalVentas -= devolucion.TotalDevolucion;
+
                     foreach (var det in devolucion.Detalles)
                     {
                         // Dañado/vencido: se pierde, no reingresa al stock vendible ni a ningún lote.

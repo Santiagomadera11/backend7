@@ -7,7 +7,9 @@ public partial class Venta
 {
     public int Id { get; set; }
     public string NumeroVenta { get; set; } = null!;
-    public int TurnoId { get; set; }
+    // Nullable: los administradores pueden vender sin turno/caja abierta (a diferencia
+    // de los empleados, que sí lo requieren). Ver VentaService.Crear.
+    public int? TurnoId { get; set; }
     public int UsuarioId { get; set; }
     public string? ClienteNombre { get; set; }
     public string? ClienteDocumento { get; set; }
@@ -25,7 +27,7 @@ public partial class Venta
 
     public virtual EstadosVentum Estado { get; set; } = null!;
     public virtual MetodosPago MetodoPago { get; set; } = null!;
-    public virtual Turno Turno { get; set; } = null!;
+    public virtual Turno? Turno { get; set; }
     public virtual Usuario Usuario { get; set; } = null!;
 
     public virtual ICollection<VentaDetalle> VentaDetalles { get; set; } = new List<VentaDetalle>();

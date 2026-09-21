@@ -37,6 +37,8 @@ namespace Syspharma.Business.Services
                     .Include(v => v.MetodoPago)
                     .Include(v => v.Usuario)
                     .Include(v => v.VentaDetalles).ThenInclude(d => d.Producto)
+                    .Include(v => v.VentaDetalles).ThenInclude(d => d.Lote)
+                    .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes).ThenInclude(vdl => vdl.Lote)
                     .Include(v => v.VentaDetallesServicios).ThenInclude(s => s.Servicio)
                     .OrderByDescending(v => v.FechaVenta)
                     .ToListAsync();
@@ -57,6 +59,8 @@ namespace Syspharma.Business.Services
                 .Include(v => v.MetodoPago)
                 .Include(v => v.Usuario)
                 .Include(v => v.VentaDetalles).ThenInclude(d => d.Producto)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lote)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes).ThenInclude(vdl => vdl.Lote)
                 .Include(v => v.VentaDetallesServicios).ThenInclude(s => s.Servicio)
                 .FirstOrDefaultAsync(v => v.Id == id);
 
@@ -65,15 +69,25 @@ namespace Syspharma.Business.Services
 
         public async Task<VentaDto> Crear(VentaCreateDto dto)
         {
-            if (dto.TurnoId <= 0)
+            // Los empleados necesitan caja/turno abierta para vender (así se audita el
+            // efectivo que manejan). Los administradores no: pueden vender sin turno
+            // asociado, esa venta simplemente no entra en ningún cuadre de caja.
+            var usuario = await _context.Usuarios.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == dto.UsuarioId);
+            var esAdministrador = usuario != null && usuario.Role.Nombre == "Administrador";
+
+            Turno? turno = null;
+            if (dto.TurnoId.HasValue && dto.TurnoId.Value > 0)
+            {
+                turno = await _context.Turnos.FindAsync(dto.TurnoId.Value);
+                if (turno == null)
+                    throw new Exception($"El turno con ID {dto.TurnoId} no existe en la base de datos. Por favor, cierre sesión y vuelva a entrar.");
+                if (turno.Estado != "activo")
+                    throw new Exception("El turno (caja) seleccionado no está activo o ya ha sido cerrado. Por favor, abra un turno de caja antes de registrar ventas.");
+            }
+            else if (!esAdministrador)
+            {
                 throw new Exception("No se puede crear la venta: El ID de Turno no es válido (0). Asegúrese de tener una caja abierta.");
-
-            var turno = await _context.Turnos.FindAsync(dto.TurnoId);
-            if (turno == null)
-                throw new Exception($"El turno con ID {dto.TurnoId} no existe en la base de datos. Por favor, cierre sesión y vuelva a entrar.");
-
-            if (turno.Estado != "activo")
-                throw new Exception("El turno (caja) seleccionado no está activo o ya ha sido cerrado. Por favor, abra un turno de caja antes de registrar ventas.");
+            }
 
             var metodoPago = await _context.MetodosPagos.FindAsync(dto.MetodoPagoId);
             if (metodoPago == null)
@@ -89,10 +103,17 @@ namespace Syspharma.Business.Services
                 decimal ivaFinal = Math.Round(subtotalFinal * (porcentajeIva / 100), 2);
                 decimal totalFinal = subtotalFinal + ivaFinal;
 
+                // El cuadre de caja (Turno.TotalVentas / saldoEsperado) cuenta SOLO productos:
+                // el dinero de servicios/citas cobrado en esta misma venta no se espera acá,
+                // se audita aparte en el panel de Citas ("Ingresos por Citas Hoy"). A pedido
+                // del negocio, aunque esa plata sí entra físicamente al mismo cajón.
+                decimal ivaProd = Math.Round(subtotalProd * (porcentajeIva / 100), 2);
+                decimal totalProductos = subtotalProd + ivaProd;
+
                 var venta = new Venta
                 {
                     NumeroVenta = $"VNT-{DateTime.Now:yyyyMMddHHmmss}",
-                    TurnoId = dto.TurnoId,
+                    TurnoId = turno?.Id,
                     UsuarioId = dto.UsuarioId,
                     ClienteNombre = string.IsNullOrWhiteSpace(dto.ClienteNombre) ? "Consumidor Final" : dto.ClienteNombre,
                     ClienteDocumento = dto.ClienteDocumento,
@@ -270,8 +291,13 @@ namespace Syspharma.Business.Services
                     }
                 }
 
-                turno.TotalVentas += totalFinal;
-                turno.ResumenVentas += 1;
+                // Sin turno (venta de administrador sin caja abierta), no hay nada que
+                // cuadrar: esta venta no se refleja en ningún saldoEsperado.
+                if (turno != null)
+                {
+                    turno.TotalVentas += totalProductos;
+                    turno.ResumenVentas += 1;
+                }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -427,10 +453,15 @@ namespace Syspharma.Business.Services
                     }
                 }
 
-                // 4. Restar del turno
+                // 4. Restar del turno. Debe restar exactamente lo mismo que se sumó al
+                // crearla (solo productos, ver Crear): si acá se restara venta.Total
+                // completo, se restaría de más por la parte de servicios que nunca se
+                // sumó, dejando Turno.TotalVentas en negativo o desfasado.
                 if (venta.Turno != null)
                 {
-                    venta.Turno.TotalVentas -= venta.Total;
+                    decimal subtotalProdAnulada = venta.VentaDetalles?.Sum(d => d.Subtotal) ?? 0;
+                    decimal ivaProdAnulada = Math.Round(subtotalProdAnulada * (venta.PorcentajeIva / 100m), 2);
+                    venta.Turno.TotalVentas -= subtotalProdAnulada + ivaProdAnulada;
                     if (venta.Turno.ResumenVentas > 0)
                         venta.Turno.ResumenVentas -= 1;
                 }

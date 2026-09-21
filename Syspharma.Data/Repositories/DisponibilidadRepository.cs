@@ -136,17 +136,11 @@ namespace Syspharma.Data.Repositories
             slots.AddRange(GenerarSlots(mananaInicioStr, mananaFinStr));
             slots.AddRange(GenerarSlots(tardeInicioStr, tardeFinStr));
 
-            // Excluir horas ya ocupadas por otra cita de este médico ese mismo día. Antes esto
-            // no se revisaba: el selector podía mostrar como "disponible" una hora en la que ya
-            // había otro paciente agendado, permitiendo doble-reservar. "Cancelada" y "No
-            // Asistió" liberan el horario porque esa cita ya no va a ocurrir.
-            var horasOcupadas = await _context.Citas
-                .Where(c => c.MedicoId == medicoId && c.Fecha == fecha && c.EstadoId != 5 && c.EstadoId != 6)
-                .Select(c => c.Hora)
-                .ToListAsync();
-            var horasOcupadasStr = horasOcupadas.Select(h => h.ToString(@"HH\:mm")).ToHashSet();
-
-            return slots.Where(s => !horasOcupadasStr.Contains(s)).ToList();
+            // No se excluyen horas con citas ya agendadas: a pedido del negocio, un mismo
+            // horario puede tener varias citas simultáneas con el mismo médico (por ejemplo,
+            // consultas rápidas agendadas una detrás de otra a la misma hora). No hay límite
+            // de citas por franja horaria.
+            return slots;
         }
 
         private static List<string> GenerarSlots(string inicio, string fin)

@@ -1,4 +1,5 @@
 using AutoMapper;
+using System.Linq;
 using Syspharma.Data.Entities;
 using Syspharma.Domain.DTOs;
 
@@ -24,7 +25,8 @@ namespace Syspharma.Business.Mappings
             // MAPEO DE DETALLES DE PRODUCTOS
             // ==========================================
             CreateMap<VentaDetalle, VentaDetalleDto>()
-                .ForMember(dest => dest.ProductoNombre, opt => opt.MapFrom(src => src.Producto.Nombre));
+                .ForMember(dest => dest.ProductoNombre, opt => opt.MapFrom(src => src.Producto.Nombre))
+                .ForMember(dest => dest.CostoUnitario, opt => opt.MapFrom(src => CalcularCostoUnitario(src)));
 
             // ==========================================
             // MAPEO DE DETALLES DE SERVICIOS (NUEVO)
@@ -38,15 +40,37 @@ namespace Syspharma.Business.Mappings
             CreateMap<EstadosVentum, EstadoVentaDto>();
 
             // ==========================================
-            // MAPEO PARA CREACI覰 (DTO -> Entidad)
+            // MAPEO PARA CREACI锟絅 (DTO -> Entidad)
             // ==========================================
-            // Estos suelen ser autom醫icos si los nombres de propiedades coinciden
+            // Estos suelen ser autom锟絫icos si los nombres de propiedades coinciden
             CreateMap<VentaCreateDto, Venta>();
             CreateMap<VentaDetalleCreateDto, VentaDetalle>();
             CreateMap<VentaDetalleServicioCreateDto, VentaDetalleServicio>();
 
             CreateMap<VentaUpdateDto, Venta>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+        }
+
+        // Costo real de un rengl贸n de venta: promedio ponderado de los lotes de los que
+        // sali贸 el stock (costo vigente en ESE momento, no el actual). Si qued贸 asociado a
+        // un 煤nico LoteId (formato previo) usa el costo de ese lote; si no hay ning煤n lote
+        // vinculado (dato legado o producto sin lotes), cae al PrecioCompra actual del
+        // producto como mejor aproximaci贸n disponible.
+        private static decimal CalcularCostoUnitario(VentaDetalle d)
+        {
+            if (d.Lotes != null && d.Lotes.Count > 0)
+            {
+                var unidades = d.Lotes.Sum(vdl => vdl.Cantidad);
+                if (unidades > 0)
+                {
+                    var costoTotal = d.Lotes.Sum(vdl => vdl.Cantidad * vdl.Lote.CostoUnitario);
+                    return costoTotal / unidades;
+                }
+            }
+
+            if (d.Lote != null) return d.Lote.CostoUnitario;
+
+            return d.Producto?.PrecioCompra ?? 0;
         }
     }
 }

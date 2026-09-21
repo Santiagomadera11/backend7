@@ -30,6 +30,28 @@ namespace Syspharma.Data.Repositories
             _context = context;
         }
 
+        // Costo real de un renglón de venta: si el stock salió de uno o varios lotes
+        // (VentaDetalleLote), se usa el promedio ponderado de sus CostoUnitario reales;
+        // si quedó asociado a un único LoteId (formato previo), se usa el costo de ese
+        // lote; si no hay ningún lote vinculado, se cae al PrecioCompra actual del
+        // producto porque es la única referencia de costo disponible para ese caso.
+        private static decimal CalcularCostoUnitario(VentaDetalle d)
+        {
+            if (d.Lotes != null && d.Lotes.Count > 0)
+            {
+                var unidades = d.Lotes.Sum(vdl => vdl.Cantidad);
+                if (unidades > 0)
+                {
+                    var costoTotal = d.Lotes.Sum(vdl => vdl.Cantidad * vdl.Lote.CostoUnitario);
+                    return costoTotal / unidades;
+                }
+            }
+
+            if (d.Lote != null) return d.Lote.CostoUnitario;
+
+            return d.Producto?.PrecioCompra ?? 0;
+        }
+
         private static VentaDto MapDto(Venta v) => new VentaDto
         {
             Id = v.Id,
@@ -54,7 +76,8 @@ namespace Syspharma.Data.Repositories
                 Cantidad = d.Cantidad,
                 PrecioUnitario = d.PrecioUnitario,
                 Subtotal = d.Subtotal,
-                LoteId = d.LoteId
+                LoteId = d.LoteId,
+                CostoUnitario = CalcularCostoUnitario(d)
             }).ToList() ?? new List<VentaDetalleDto>(),
             Servicios = v.VentaDetallesServicios?.Select(s => new VentaDetalleServicioDto
             {
@@ -74,6 +97,8 @@ namespace Syspharma.Data.Repositories
                 .Include(v => v.MetodoPago)
                 .Include(v => v.Estado)
                 .Include(v => v.VentaDetalles).ThenInclude(d => d.Producto)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lote)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes).ThenInclude(vdl => vdl.Lote)
                 .Include(v => v.VentaDetallesServicios).ThenInclude(s => s.Servicio)
                 .OrderByDescending(v => v.FechaVenta)
                 .ToListAsync();
@@ -87,6 +112,8 @@ namespace Syspharma.Data.Repositories
                 .Include(v => v.MetodoPago)
                 .Include(v => v.Estado)
                 .Include(v => v.VentaDetalles).ThenInclude(d => d.Producto)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lote)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes).ThenInclude(vdl => vdl.Lote)
                 .Include(v => v.VentaDetallesServicios).ThenInclude(s => s.Servicio)
                 .FirstOrDefaultAsync(v => v.Id == id);
             return v == null ? null : MapDto(v);

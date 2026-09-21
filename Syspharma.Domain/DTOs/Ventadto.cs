@@ -8,7 +8,7 @@ namespace Syspharma.Domain.DTOs
     {
         public int Id { get; set; }
         public string NumeroVenta { get; set; } = null!;
-        public int TurnoId { get; set; }
+        public int? TurnoId { get; set; }
         public int UsuarioId { get; set; }
         public string UsuarioNombre { get; set; } = "";
         public string? ClienteNombre { get; set; }
@@ -43,6 +43,12 @@ namespace Syspharma.Domain.DTOs
         public int? FormaVentaId { get; set; }
         public string? FormaVentaTipo { get; set; }
         public int FactorUnidades { get; set; } = 1;
+
+        // Costo real de este renglón al momento de la venta (promedio ponderado de los
+        // lotes de los que salió el stock). Si la venta no quedó asociada a ningún lote
+        // (dato legado o producto sin lotes), cae al PrecioCompra actual del producto
+        // como mejor aproximación disponible.
+        public decimal CostoUnitario { get; set; }
     }
 
     public class VentaDetalleServicioDto
@@ -59,9 +65,11 @@ namespace Syspharma.Domain.DTOs
 
     public class VentaCreateDto
     {
-        [Required(ErrorMessage = "El ID del turno es obligatorio.")]
+        // Opcional: solo lo requieren los empleados (necesitan caja/turno abierto). Los
+        // administradores pueden vender sin turno asociado. La validación de "obligatorio
+        // según el rol" vive en VentaService.Crear, no acá.
         [Range(1, int.MaxValue, ErrorMessage = "El ID del turno seleccionado no es válido.")]
-        public int TurnoId { get; set; }
+        public int? TurnoId { get; set; }
 
         [Required(ErrorMessage = "El ID de usuario es obligatorio.")]
         [Range(1, int.MaxValue, ErrorMessage = "El ID de usuario seleccionado no es válido.")]
