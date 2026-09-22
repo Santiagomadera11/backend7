@@ -62,10 +62,19 @@ builder.Services.AddAuthentication(options =>
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
+var allowedOrigins = new[]
+{
+    "https://frontend-six-rho-0263ildlbo.vercel.app",
+    "http://localhost:5173",
+};
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFront", policy =>
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+        policy.SetIsOriginAllowed(origin =>
+                allowedOrigins.Contains(origin) || origin.EndsWith(".vercel.app"))
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 builder.Services.AddControllers()
