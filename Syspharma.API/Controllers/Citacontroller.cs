@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -28,6 +29,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("appointments.create")]
         public async Task<IActionResult> Crear([FromBody] CitaCreateDto dto)
         {
             try
@@ -41,6 +43,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("appointments.create")]
         public async Task<IActionResult> Actualizar([FromBody] CitaUpdateDto dto)
         {
             try
@@ -54,18 +57,33 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("appointments.status")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] int estadoId)
         {
-            var res = await _service.CambiarEstado(id, estadoId);
-            return res ? Ok(new { message = "Estado actualizado" }) : NotFound();
+            try
+            {
+                var res = await _service.CambiarEstado(id, estadoId);
+                return res ? Ok(new { message = "Estado actualizado" }) : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-
         [HttpDelete("{id}")]
+        [RequirePermission("appointments.status")]
         public async Task<IActionResult> Eliminar(int id)
         {
-            var res = await _service.Eliminar(id);
-            return res ? Ok(new { message = "Cita eliminada correctamente" }) : NotFound();
+            try
+            {
+                var res = await _service.Eliminar(id);
+                return res ? Ok(new { message = "Cita eliminada correctamente" }) : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
 using Syspharma.Domain.DTOs;
@@ -87,9 +87,16 @@ namespace Syspharma.Data.Repositories
         {
             var turno = await _context.Turnos.FindAsync(dto.Id);
             if (turno == null) throw new Exception("Turno no encontrado");
+            if (turno.Estado.Contains("cerrado"))
+                throw new Exception("Este turno ya fue cerrado.");
+
             turno.Estado = "cerrado";
             turno.FechaCierre = DateTime.Now;
             turno.MontoFinal = dto.MontoFinal;
+
+            var saldoEsperado = turno.MontoBase + turno.TotalVentas - turno.TotalGastos;
+            turno.Diferencia = dto.MontoFinal - saldoEsperado;
+
             await _context.SaveChangesAsync();
             return MapDto(turno);
         }

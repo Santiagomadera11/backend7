@@ -8,7 +8,7 @@ namespace Syspharma.Domain.DTOs
     {
         public int Id { get; set; }
         public string NumeroVenta { get; set; } = null!;
-        public int TurnoId { get; set; }
+        public int? TurnoId { get; set; }
         public int UsuarioId { get; set; }
         public string UsuarioNombre { get; set; } = "";
         public string? ClienteNombre { get; set; }
@@ -25,7 +25,6 @@ namespace Syspharma.Domain.DTOs
         public string? Notas { get; set; }
         public DateTime? FechaVenta { get; set; }
         public string Origen { get; set; } = "CAJA";
-        public int? PedidoId { get; set; }
         public string? ReferenciasPago { get; set; }
         public List<VentaDetalleDto> Detalles { get; set; } = new();
         public List<VentaDetalleServicioDto> Servicios { get; set; } = new();
@@ -41,6 +40,11 @@ namespace Syspharma.Domain.DTOs
         public decimal Descuento { get; set; }
         public decimal Subtotal { get; set; }
         public int? LoteId { get; set; }
+        public int? FormaVentaId { get; set; }
+        public string? FormaVentaTipo { get; set; }
+        public int FactorUnidades { get; set; } = 1;
+
+        public decimal CostoUnitario { get; set; }
     }
 
     public class VentaDetalleServicioDto
@@ -57,9 +61,8 @@ namespace Syspharma.Domain.DTOs
 
     public class VentaCreateDto
     {
-        [Required(ErrorMessage = "El ID del turno es obligatorio.")]
         [Range(1, int.MaxValue, ErrorMessage = "El ID del turno seleccionado no es válido.")]
-        public int TurnoId { get; set; }
+        public int? TurnoId { get; set; }
 
         [Required(ErrorMessage = "El ID de usuario es obligatorio.")]
         [Range(1, int.MaxValue, ErrorMessage = "El ID de usuario seleccionado no es válido.")]
@@ -96,8 +99,6 @@ namespace Syspharma.Domain.DTOs
         [StringLength(50, ErrorMessage = "El origen no puede superar los 50 caracteres.")]
         public string Origen { get; set; } = "CAJA";
 
-        public int? PedidoId { get; set; }
-
         [StringLength(100, ErrorMessage = "Las referencias de pago no pueden superar los 100 caracteres.")]
         public string? ReferenciasPago { get; set; }
 
@@ -126,6 +127,8 @@ namespace Syspharma.Domain.DTOs
         public decimal Subtotal { get; set; }
 
         public int? LoteId { get; set; }
+
+        public int? FormaVentaId { get; set; }
     }
 
     public class VentaDetalleServicioCreateDto

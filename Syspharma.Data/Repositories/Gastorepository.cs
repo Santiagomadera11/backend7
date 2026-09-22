@@ -119,8 +119,8 @@ namespace Syspharma.Data.Repositories
             return MapDto(gasto);
         }
 
-        public async Task<GastoDto> Actualizar(GastoUpdateDto dto) { return null; }
-        public async Task<bool> Eliminar(int id) { return true; }
+        public Task<GastoDto> Actualizar(GastoUpdateDto dto) => throw new NotImplementedException();
+        public Task<bool> Eliminar(int id) => throw new NotImplementedException();
 
         public async Task<bool> Anular(int id, string? motivo)
         {

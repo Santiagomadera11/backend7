@@ -12,7 +12,7 @@ namespace Syspharma.Data.Repositories
     public interface IMarcaRepository
     {
         Task<List<MarcaDto>> ObtenerTodos();
-        Task<List<MarcaDto>> ObtenerTodosConInactivos(); // para la página de gestión de marcas
+        Task<List<MarcaDto>> ObtenerTodosConInactivos();
         Task<MarcaDto?> ObtenerPorId(int id);
         Task<MarcaDto> Crear(MarcaCreateDto dto);
         Task<MarcaDto> Actualizar(MarcaUpdateDto dto);
@@ -34,7 +34,6 @@ namespace Syspharma.Data.Repositories
             FechaCreacion = m.FechaCreacion
         };
 
-        // Solo activas — para dropdowns de productos
         public async Task<List<MarcaDto>> ObtenerTodos()
         {
             var lista = await _context.Marcas
@@ -43,9 +42,6 @@ namespace Syspharma.Data.Repositories
             return lista.Select(ToDto).ToList();
         }
 
-        // Activas + inactivas — para la página de gestión de marcas.
-        // El conteo de productos se calcula con un GROUP BY liviano en vez de
-        // traer la tabla de productos completa (con todos sus joins) al cliente.
         public async Task<List<MarcaDto>> ObtenerTodosConInactivos()
         {
             var lista = await _context.Marcas.ToListAsync();

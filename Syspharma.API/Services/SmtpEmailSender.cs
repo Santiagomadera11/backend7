@@ -35,13 +35,10 @@ namespace Syspharma.API.Services
                     DeliveryMethod = SmtpDeliveryMethod.Network
                 };
 
-                // 1. PRIMERO: desactivar credenciales por defecto
                 client.UseDefaultCredentials = false;
 
-                // 2. SEGUNDO: asignar tus credenciales (contraseña de aplicación SIN ESPACIOS)
                 client.Credentials = new NetworkCredential(_settings.User, _settings.Password);
 
-                // 3. TERCERO: activar SSL (necesario para Gmail)
                 client.EnableSsl = _settings.EnableSsl;
 
                 await client.SendMailAsync(message);

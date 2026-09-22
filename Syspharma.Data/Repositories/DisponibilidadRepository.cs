@@ -32,10 +32,10 @@ namespace Syspharma.Data.Repositories
                     Id = h.Id,
                     MedicoId = h.MedicoId,
                     DiaSemana = h.DiaSemana,
-                    MananaInicio = h.MananaInicio.HasValue ? h.MananaInicio.Value.ToString(@"hh\:mm") : "",
-                    MananaFin = h.MananaFin.HasValue ? h.MananaFin.Value.ToString(@"hh\:mm") : "",
-                    TardeInicio = h.TardeInicio.HasValue ? h.TardeInicio.Value.ToString(@"hh\:mm") : "",
-                    TardeFin = h.TardeFin.HasValue ? h.TardeFin.Value.ToString(@"hh\:mm") : ""
+                    MananaInicio = h.MananaInicio.HasValue ? h.MananaInicio.Value.ToString(@"HH\:mm") : "",
+                    MananaFin = h.MananaFin.HasValue ? h.MananaFin.Value.ToString(@"HH\:mm") : "",
+                    TardeInicio = h.TardeInicio.HasValue ? h.TardeInicio.Value.ToString(@"HH\:mm") : "",
+                    TardeFin = h.TardeFin.HasValue ? h.TardeFin.Value.ToString(@"HH\:mm") : ""
                 }).ToListAsync();
 
         public async Task GuardarHorario(int medicoId, List<HorarioItemDto> horarios)
@@ -124,14 +124,15 @@ namespace Syspharma.Data.Repositories
             if (bloqueado) return new List<string>();
 
             var slots = new List<string>();
-            
-            var mananaInicioStr = horario.MananaInicio.HasValue ? horario.MananaInicio.Value.ToString(@"hh\:mm") : "";
-            var mananaFinStr = horario.MananaFin.HasValue ? horario.MananaFin.Value.ToString(@"hh\:mm") : "";
-            var tardeInicioStr = horario.TardeInicio.HasValue ? horario.TardeInicio.Value.ToString(@"hh\:mm") : "";
-            var tardeFinStr = horario.TardeFin.HasValue ? horario.TardeFin.Value.ToString(@"hh\:mm") : "";
+
+            var mananaInicioStr = horario.MananaInicio.HasValue ? horario.MananaInicio.Value.ToString(@"HH\:mm") : "";
+            var mananaFinStr = horario.MananaFin.HasValue ? horario.MananaFin.Value.ToString(@"HH\:mm") : "";
+            var tardeInicioStr = horario.TardeInicio.HasValue ? horario.TardeInicio.Value.ToString(@"HH\:mm") : "";
+            var tardeFinStr = horario.TardeFin.HasValue ? horario.TardeFin.Value.ToString(@"HH\:mm") : "";
 
             slots.AddRange(GenerarSlots(mananaInicioStr, mananaFinStr));
             slots.AddRange(GenerarSlots(tardeInicioStr, tardeFinStr));
+
             return slots;
         }
 

@@ -155,65 +155,6 @@ namespace Syspharma.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Carrito", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("FechaActualizacion")
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaActualizacion");
-
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
-                        .HasColumnName("usuarioId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId")
-                        .IsUnique();
-
-                    b.ToTable("carritos", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.CarritoItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int")
-                        .HasColumnName("cantidad");
-
-                    b.Property<int>("CarritoId")
-                        .HasColumnType("int")
-                        .HasColumnName("carritoId");
-
-                    b.Property<decimal>("PrecioUnitario")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("precioUnitario");
-
-                    b.Property<int>("ProductoId")
-                        .HasColumnType("int")
-                        .HasColumnName("productoId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CarritoId");
-
-                    b.HasIndex("ProductoId");
-
-                    b.ToTable("carrito_items", (string)null);
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Categoria", b =>
                 {
                     b.Property<int>("Id")
@@ -350,10 +291,6 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("pacienteTelefono");
 
-                    b.Property<int?>("PedidoId")
-                        .HasColumnType("int")
-                        .HasColumnName("pedidoId");
-
                     b.Property<decimal?>("Precio")
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("precio");
@@ -379,8 +316,6 @@ namespace Syspharma.Data.Migrations
                         .HasName("PK__citas__3213E83FC793410B");
 
                     b.HasIndex("EstadoId");
-
-                    b.HasIndex("PedidoId");
 
                     b.HasIndex("ServicioId");
 
@@ -583,6 +518,12 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("productoId");
 
+                    b.Property<bool>("Reingresa")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("reingresa");
+
                     b.Property<decimal?>("SubtotalDevuelto")
                         .HasColumnType("decimal(12,2)")
                         .HasColumnName("subtotalDevuelto");
@@ -597,6 +538,35 @@ namespace Syspharma.Data.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("DetallesDevoluciones", (string)null);
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.DetalleDevolucionLote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int")
+                        .HasColumnName("cantidad");
+
+                    b.Property<int>("DetalleDevolucionId")
+                        .HasColumnType("int")
+                        .HasColumnName("detalleDevolucionId");
+
+                    b.Property<int>("LoteId")
+                        .HasColumnType("int")
+                        .HasColumnName("loteId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetalleDevolucionId");
+
+                    b.HasIndex("LoteId");
+
+                    b.ToTable("detalle_devolucion_lotes", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Devolucion", b =>
@@ -817,30 +787,6 @@ namespace Syspharma.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("estados_compra", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.EstadosPedido", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("nombre");
-
-                    b.HasKey("Id")
-                        .HasName("PK__estados___3213E83FD81DA3EB");
-
-                    b.HasIndex(new[] { "Nombre" }, "UQ__estados___72AFBCC6CC1257F9")
-                        .IsUnique();
-
-                    b.ToTable("estados_pedido", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.EstadosProveedor", b =>
@@ -1226,202 +1172,6 @@ namespace Syspharma.Data.Migrations
                     b.ToTable("metodos_pago", (string)null);
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Notificacion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaCreacion");
-
-                    b.Property<bool>("Leida")
-                        .HasColumnType("bit")
-                        .HasColumnName("leida");
-
-                    b.Property<string>("Mensaje")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("mensaje");
-
-                    b.Property<string>("Path")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("path");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("tipo");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("titulo");
-
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
-                        .HasColumnName("usuarioId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId", "FechaCreacion");
-
-                    b.ToTable("notificaciones", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.Pedido", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClienteDocumento")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("clienteDocumento");
-
-                    b.Property<string>("ClienteEmail")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("clienteEmail");
-
-                    b.Property<string>("ClienteNombre")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("clienteNombre");
-
-                    b.Property<string>("ClienteTelefono")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("clienteTelefono");
-
-                    b.Property<string>("Direccion")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("EstadoId")
-                        .HasColumnType("int")
-                        .HasColumnName("estadoId");
-
-                    b.Property<DateTime?>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<DateTime?>("FechaEntrega")
-                        .HasColumnType("datetime")
-                        .HasColumnName("fechaEntrega");
-
-                    b.Property<decimal>("Iva")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("iva");
-
-                    b.Property<int?>("MetodoPagoId")
-                        .HasColumnType("int")
-                        .HasColumnName("metodoPagoId");
-
-                    b.Property<string>("Notas")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("notas");
-
-                    b.Property<string>("NumeroPedido")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("numeroPedido");
-
-                    b.Property<string>("Origen")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("web")
-                        .HasColumnName("origen");
-
-                    b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("subtotal");
-
-                    b.Property<decimal>("Total")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("total");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("int")
-                        .HasColumnName("usuarioId");
-
-                    b.HasKey("Id")
-                        .HasName("PK__pedidos__3213E83F5DD7EBD1");
-
-                    b.HasIndex("MetodoPagoId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.HasIndex(new[] { "NumeroPedido" }, "UQ__pedidos__90DD6149AD9BA5B6")
-                        .IsUnique();
-
-                    b.HasIndex(new[] { "EstadoId" }, "idx_pedidos_estado");
-
-                    b.HasIndex(new[] { "FechaCreacion" }, "idx_pedidos_fecha")
-                        .IsDescending();
-
-                    b.ToTable("pedidos", (string)null);
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.PedidoDetalle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("int")
-                        .HasColumnName("cantidad");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("nombre");
-
-                    b.Property<int>("PedidoId")
-                        .HasColumnType("int")
-                        .HasColumnName("pedidoId");
-
-                    b.Property<decimal>("PrecioUnitario")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("precioUnitario");
-
-                    b.Property<int?>("ProductoId")
-                        .HasColumnType("int")
-                        .HasColumnName("productoId");
-
-                    b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(12, 2)")
-                        .HasColumnName("subtotal");
-
-                    b.HasKey("Id")
-                        .HasName("PK__pedido_d__3213E83F48F2B407");
-
-                    b.HasIndex("PedidoId");
-
-                    b.HasIndex("ProductoId");
-
-                    b.ToTable("pedido_detalles", (string)null);
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Permiso", b =>
                 {
                     b.Property<int>("Id")
@@ -1590,6 +1340,49 @@ namespace Syspharma.Data.Migrations
                     b.HasIndex(new[] { "Nombre" }, "idx_productos_nombre");
 
                     b.ToTable("productos", (string)null);
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.ProductoFormaVenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("activo");
+
+                    b.Property<int>("FactorUnidades")
+                        .HasColumnType("int")
+                        .HasColumnName("factorUnidades");
+
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("precio");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int")
+                        .HasColumnName("productoId");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("tipo");
+
+                    b.HasKey("Id")
+                        .HasName("PK_producto_forma_venta");
+
+                    b.HasIndex("ProductoId", "Tipo")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_producto_forma_venta_producto_tipo");
+
+                    b.ToTable("producto_forma_venta", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.ProductoMedicamento", b =>
@@ -2278,10 +2071,6 @@ namespace Syspharma.Data.Migrations
                         .HasDefaultValue("CAJA")
                         .HasColumnName("origen");
 
-                    b.Property<int?>("PedidoId")
-                        .HasColumnType("int")
-                        .HasColumnName("pedidoId");
-
                     b.Property<decimal>("PorcentajeIva")
                         .HasColumnType("decimal(5, 2)")
                         .HasColumnName("porcentajeIva");
@@ -2299,7 +2088,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("total");
 
-                    b.Property<int>("TurnoId")
+                    b.Property<int?>("TurnoId")
                         .HasColumnType("int")
                         .HasColumnName("turnoId");
 
@@ -2313,8 +2102,6 @@ namespace Syspharma.Data.Migrations
                     b.HasIndex("EstadoId");
 
                     b.HasIndex("MetodoPagoId");
-
-                    b.HasIndex("PedidoId");
 
                     b.HasIndex("UsuarioId");
 
@@ -2344,6 +2131,21 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("descuento");
 
+                    b.Property<int>("FactorUnidades")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1)
+                        .HasColumnName("factorUnidades");
+
+                    b.Property<int?>("FormaVentaId")
+                        .HasColumnType("int")
+                        .HasColumnName("formaVentaId");
+
+                    b.Property<string>("FormaVentaTipo")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("formaVentaTipo");
+
                     b.Property<int?>("LoteId")
                         .HasColumnType("int")
                         .HasColumnName("loteId");
@@ -2367,6 +2169,8 @@ namespace Syspharma.Data.Migrations
                     b.HasKey("Id")
                         .HasName("PK__venta_de__3213E83FD3C3548D");
 
+                    b.HasIndex("FormaVentaId");
+
                     b.HasIndex("LoteId");
 
                     b.HasIndex("ProductoId");
@@ -2374,6 +2178,35 @@ namespace Syspharma.Data.Migrations
                     b.HasIndex("VentaId");
 
                     b.ToTable("venta_detalles", (string)null);
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalleLote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int")
+                        .HasColumnName("cantidad");
+
+                    b.Property<int>("LoteId")
+                        .HasColumnType("int")
+                        .HasColumnName("loteId");
+
+                    b.Property<int>("VentaDetalleId")
+                        .HasColumnType("int")
+                        .HasColumnName("ventaDetalleId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoteId");
+
+                    b.HasIndex("VentaDetalleId");
+
+                    b.ToTable("venta_detalle_lotes", (string)null);
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalleServicio", b =>
@@ -2476,38 +2309,6 @@ namespace Syspharma.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Carrito", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Carritos_Usuarios");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.CarritoItem", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Carrito", "Carrito")
-                        .WithMany("Items")
-                        .HasForeignKey("CarritoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_CarritoItems_Carritos");
-
-                    b.HasOne("Syspharma.Data.Entities.Producto", "Producto")
-                        .WithMany()
-                        .HasForeignKey("ProductoId")
-                        .IsRequired()
-                        .HasConstraintName("FK_CarritoItems_Productos");
-
-                    b.Navigation("Carrito");
-
-                    b.Navigation("Producto");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Cita", b =>
                 {
                     b.HasOne("Syspharma.Data.Entities.EstadosCitum", "Estado")
@@ -2521,12 +2322,6 @@ namespace Syspharma.Data.Migrations
                         .HasForeignKey("MedicoId")
                         .IsRequired()
                         .HasConstraintName("FK_Citas_Medicos");
-
-                    b.HasOne("Syspharma.Data.Entities.Pedido", "Pedido")
-                        .WithMany()
-                        .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_Citas_Pedidos");
 
                     b.HasOne("Syspharma.Data.Entities.Servicio", "Servicio")
                         .WithMany("Cita")
@@ -2549,8 +2344,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Estado");
 
                     b.Navigation("Medico");
-
-                    b.Navigation("Pedido");
 
                     b.Navigation("Servicio");
 
@@ -2630,6 +2423,27 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Devolucion");
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.DetalleDevolucionLote", b =>
+                {
+                    b.HasOne("Syspharma.Data.Entities.DetalleDevolucion", "DetalleDevolucion")
+                        .WithMany("Lotes")
+                        .HasForeignKey("DetalleDevolucionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_DetalleDevolucionLotes_DetallesDevolucion");
+
+                    b.HasOne("Syspharma.Data.Entities.Lote", "Lote")
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_DetalleDevolucionLotes_Lotes");
+
+                    b.Navigation("DetalleDevolucion");
+
+                    b.Navigation("Lote");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Devolucion", b =>
@@ -2744,64 +2558,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Medico");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Notificacion", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Notificaciones_Usuarios");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.Pedido", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.EstadosPedido", "Estado")
-                        .WithMany("Pedidos")
-                        .HasForeignKey("EstadoId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Pedidos_Estado");
-
-                    b.HasOne("Syspharma.Data.Entities.MetodosPago", "MetodoPago")
-                        .WithMany("Pedidos")
-                        .HasForeignKey("MetodoPagoId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_Pedidos_MetodoPago");
-
-                    b.HasOne("Syspharma.Data.Entities.Usuario", "Usuario")
-                        .WithMany("Pedidos")
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_Pedidos_Usuarios");
-
-                    b.Navigation("Estado");
-
-                    b.Navigation("MetodoPago");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.PedidoDetalle", b =>
-                {
-                    b.HasOne("Syspharma.Data.Entities.Pedido", "Pedido")
-                        .WithMany("PedidoDetalles")
-                        .HasForeignKey("PedidoId")
-                        .IsRequired()
-                        .HasConstraintName("FK_PedidoDetalles_Pedidos");
-
-                    b.HasOne("Syspharma.Data.Entities.Producto", "Producto")
-                        .WithMany("PedidoDetalles")
-                        .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_PedidoDetalles_Productos");
-
-                    b.Navigation("Pedido");
-
-                    b.Navigation("Producto");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Producto", b =>
                 {
                     b.HasOne("Syspharma.Data.Entities.Categoria", "Categoria")
@@ -2835,6 +2591,18 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Presentacion");
 
                     b.Navigation("Proveedor");
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.ProductoFormaVenta", b =>
+                {
+                    b.HasOne("Syspharma.Data.Entities.Producto", "Producto")
+                        .WithMany("FormasVenta")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_ProductoFormaVenta_Productos");
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.ProductoMedicamento", b =>
@@ -2940,16 +2708,9 @@ namespace Syspharma.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Ventas_MetodoPago");
 
-                    b.HasOne("Syspharma.Data.Entities.Pedido", "Pedido")
-                        .WithMany()
-                        .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_Ventas_Pedidos");
-
                     b.HasOne("Syspharma.Data.Entities.Turno", "Turno")
                         .WithMany("Venta")
                         .HasForeignKey("TurnoId")
-                        .IsRequired()
                         .HasConstraintName("FK_Ventas_Turnos");
 
                     b.HasOne("Syspharma.Data.Entities.Usuario", "Usuario")
@@ -2962,8 +2723,6 @@ namespace Syspharma.Data.Migrations
 
                     b.Navigation("MetodoPago");
 
-                    b.Navigation("Pedido");
-
                     b.Navigation("Turno");
 
                     b.Navigation("Usuario");
@@ -2971,6 +2730,12 @@ namespace Syspharma.Data.Migrations
 
             modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalle", b =>
                 {
+                    b.HasOne("Syspharma.Data.Entities.ProductoFormaVenta", "FormaVenta")
+                        .WithMany()
+                        .HasForeignKey("FormaVentaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VentaDetalles_ProductoFormaVenta");
+
                     b.HasOne("Syspharma.Data.Entities.Lote", "Lote")
                         .WithMany()
                         .HasForeignKey("LoteId")
@@ -2989,11 +2754,34 @@ namespace Syspharma.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_VentaDetalles_Ventas");
 
+                    b.Navigation("FormaVenta");
+
                     b.Navigation("Lote");
 
                     b.Navigation("Producto");
 
                     b.Navigation("Venta");
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalleLote", b =>
+                {
+                    b.HasOne("Syspharma.Data.Entities.Lote", "Lote")
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_VentaDetalleLotes_Lotes");
+
+                    b.HasOne("Syspharma.Data.Entities.VentaDetalle", "VentaDetalle")
+                        .WithMany("Lotes")
+                        .HasForeignKey("VentaDetalleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_VentaDetalleLotes_VentaDetalles");
+
+                    b.Navigation("Lote");
+
+                    b.Navigation("VentaDetalle");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalleServicio", b =>
@@ -3023,11 +2811,6 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("Venta");
                 });
 
-            modelBuilder.Entity("Syspharma.Data.Entities.Carrito", b =>
-                {
-                    b.Navigation("Items");
-                });
-
             modelBuilder.Entity("Syspharma.Data.Entities.Categoria", b =>
                 {
                     b.Navigation("Productos");
@@ -3041,6 +2824,11 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Syspharma.Data.Entities.Compra", b =>
                 {
                     b.Navigation("CompraDetalles");
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.DetalleDevolucion", b =>
+                {
+                    b.Navigation("Lotes");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Devolucion", b =>
@@ -3061,11 +2849,6 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Syspharma.Data.Entities.EstadosCompra", b =>
                 {
                     b.Navigation("Compras");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.EstadosPedido", b =>
-                {
-                    b.Navigation("Pedidos");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.EstadosProveedor", b =>
@@ -3094,14 +2877,7 @@ namespace Syspharma.Data.Migrations
 
             modelBuilder.Entity("Syspharma.Data.Entities.MetodosPago", b =>
                 {
-                    b.Navigation("Pedidos");
-
                     b.Navigation("Venta");
-                });
-
-            modelBuilder.Entity("Syspharma.Data.Entities.Pedido", b =>
-                {
-                    b.Navigation("PedidoDetalles");
                 });
 
             modelBuilder.Entity("Syspharma.Data.Entities.Permiso", b =>
@@ -3118,9 +2894,9 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Navigation("CompraDetalles");
 
-                    b.Navigation("Lotes");
+                    b.Navigation("FormasVenta");
 
-                    b.Navigation("PedidoDetalles");
+                    b.Navigation("Lotes");
 
                     b.Navigation("ProductoMedicamento");
 
@@ -3170,8 +2946,6 @@ namespace Syspharma.Data.Migrations
 
                     b.Navigation("Gastos");
 
-                    b.Navigation("Pedidos");
-
                     b.Navigation("Turnos");
 
                     b.Navigation("Venta");
@@ -3182,6 +2956,11 @@ namespace Syspharma.Data.Migrations
                     b.Navigation("VentaDetalles");
 
                     b.Navigation("VentaDetallesServicios");
+                });
+
+            modelBuilder.Entity("Syspharma.Data.Entities.VentaDetalle", b =>
+                {
+                    b.Navigation("Lotes");
                 });
 #pragma warning restore 612, 618
         }

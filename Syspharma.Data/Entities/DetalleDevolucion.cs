@@ -10,7 +10,11 @@ public class DetalleDevolucion
     public decimal PrecioUnitario { get; set; }
     public decimal? SubtotalDevuelto { get; set; }
 
+    public bool Reingresa { get; set; } = true;
+
     public virtual Devolucion Devolucion { get; set; } = null!;
     public virtual Producto Producto { get; set; } = null!;
     public virtual VentaDetalle DetalleVenta { get; set; } = null!;
+
+    public virtual ICollection<DetalleDevolucionLote> Lotes { get; set; } = new List<DetalleDevolucionLote>();
 }

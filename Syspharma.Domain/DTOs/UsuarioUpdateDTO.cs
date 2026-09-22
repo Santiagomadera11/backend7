@@ -12,7 +12,7 @@ namespace Syspharma.Domain.DTOs
         public string Nombre { get; set; } = null!;
 
         [StringLength(100, ErrorMessage = "Los apellidos no pueden superar los 100 caracteres.")]
-        public string? Apellidos { get; set; }        // ✅ Agregado
+        public string? Apellidos { get; set; }
 
         [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
         [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
@@ -30,9 +30,9 @@ namespace Syspharma.Domain.DTOs
         public string? Telefono { get; set; }
 
         [StringLength(250, ErrorMessage = "La dirección no puede superar los 250 caracteres.")]
-        public string? Direccion { get; set; }        // ✅ Agregado
+        public string? Direccion { get; set; }
 
-        public string? Avatar { get; set; }           // ✅ Agregado (para foto)
+        public string? Avatar { get; set; }
 
         [Required(ErrorMessage = "El rol es obligatorio.")]
         [Range(1, int.MaxValue, ErrorMessage = "El rol seleccionado no es válido.")]
@@ -41,6 +41,6 @@ namespace Syspharma.Domain.DTOs
         public bool Estado { get; set; }
 
         [Range(0, 100, ErrorMessage = "El porcentaje de IVA debe estar entre 0% y 100%.")]
-        public decimal PorcentajeIva { get; set; } = 19m; // ✅ Agregado, valor por defecto 19%
+        public decimal PorcentajeIva { get; set; } = 19m;
     }
 }

@@ -39,16 +39,13 @@ namespace Syspharma.Data.Repositories
             EstadoNombre = c.Estado?.Nombre ?? "Pendiente",
             UsuarioId = c.UsuarioId,
             UsuarioNombre = c.Usuario?.Nombre,
-            PedidoId = c.PedidoId,      // ← AGREGADO
-            VentaId = c.VentaId,        // ← AGREGADO
+            VentaId = c.VentaId,
             Fecha = c.Fecha == default ? DateTime.Now.ToString("yyyy-MM-dd") : c.Fecha.ToString("yyyy-MM-dd"),
             Hora = c.Hora == default ? "00:00" : c.Hora.ToString(@"HH\:mm"),
             Notas = c.Notas,
             FechaCreacion = c.FechaCreacion
         };
 
-        // "desde" filtra en SQL (para el feed de notificaciones, que solo necesita
-        // las citas creadas después del último visto en vez de traer la tabla entera).
         public async Task<List<CitaDto>> ObtenerTodos(DateTime? desde = null)
         {
             var query = _context.Citas
@@ -93,7 +90,12 @@ namespace Syspharma.Data.Repositories
             if (fechaHoraCita <= horaActualColombia)
                 throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
 
-            // --- NUEVO: Buscamos el servicio asociado para guardar su precio y nombre histórico ---
+            var yaOcupado = await _context.Citas.AnyAsync(c =>
+                c.MedicoId == dto.MedicoId && c.Fecha == fechaCita && c.Hora == horaCita &&
+                c.EstadoId != 5 && c.EstadoId != 6);
+            if (yaOcupado)
+                throw new Exception("Ya existe una cita agendada con este médico en esa fecha y hora.");
+
             var servicio = await _context.Servicios.FindAsync(dto.ServicioId);
             decimal? precioServicio = servicio?.Precio;
             string? nombreServicio = servicio?.Nombre;
@@ -107,7 +109,6 @@ namespace Syspharma.Data.Repositories
                 PacienteEmail = dto.PacienteEmail,
                 ServicioId = dto.ServicioId,
 
-                // Guardamos el precio y el nombre histórico del servicio en la cita
                 ServicioNombre = nombreServicio,
                 Precio = precioServicio,
 
@@ -125,29 +126,54 @@ namespace Syspharma.Data.Repositories
 
         public async Task<CitaDto> Actualizar(CitaUpdateDto dto)
         {
+            var cita = await _context.Citas.FindAsync(dto.Id) ?? throw new Exception("No existe");
+
             var fechaCita = DateOnly.Parse(dto.Fecha);
             var horaCita = TimeOnly.Parse(dto.Hora);
-            var fechaHoraCita = fechaCita.ToDateTime(horaCita);
 
-            TimeZoneInfo colombiaZone;
-            try
+            if (fechaCita != cita.Fecha || horaCita != cita.Hora)
             {
-                colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+                var fechaHoraCita = fechaCita.ToDateTime(horaCita);
+
+                TimeZoneInfo colombiaZone;
+                try
+                {
+                    colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("SA Pacific Standard Time");
+                }
+                catch (TimeZoneNotFoundException)
+                {
+                    colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+                }
+
+                var horaActualColombia = TimeZoneInfo.ConvertTime(DateTime.UtcNow, colombiaZone);
+
+                if (fechaHoraCita <= horaActualColombia)
+                    throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
+
+                var yaOcupado = await _context.Citas.AnyAsync(c =>
+                    c.Id != dto.Id && c.MedicoId == dto.MedicoId && c.Fecha == fechaCita && c.Hora == horaCita &&
+                    c.EstadoId != 5 && c.EstadoId != 6);
+                if (yaOcupado)
+                    throw new Exception("Ya existe una cita agendada con este médico en esa fecha y hora.");
             }
-            catch (TimeZoneNotFoundException)
+
+            if (dto.ServicioId.HasValue && dto.ServicioId != cita.ServicioId)
             {
-                colombiaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Bogota");
+                var servicio = await _context.Servicios.FindAsync(dto.ServicioId.Value);
+                cita.ServicioNombre = servicio?.Nombre;
+                cita.Precio = servicio?.Precio;
             }
 
-            var horaActualColombia = TimeZoneInfo.ConvertTime(DateTime.UtcNow, colombiaZone);
-
-            if (fechaHoraCita <= horaActualColombia)
-                throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
-
-            var cita = await _context.Citas.FindAsync(dto.Id) ?? throw new Exception("No existe");
-            cita.MedicoId = dto.MedicoId; cita.PacienteNombre = dto.PacienteNombre;
-            cita.EstadoId = dto.EstadoId; cita.Fecha = fechaCita;
+            cita.MedicoId = dto.MedicoId;
+            cita.PacienteNombre = dto.PacienteNombre;
+            cita.PacienteDocumento = dto.PacienteDocumento;
+            cita.PacienteTelefono = dto.PacienteTelefono;
+            cita.PacienteEmail = dto.PacienteEmail;
+            cita.ServicioId = dto.ServicioId;
+            cita.EstadoId = dto.EstadoId;
+            cita.Fecha = fechaCita;
             cita.Hora = horaCita;
+            cita.Notas = dto.Notas;
             await _context.SaveChangesAsync();
             return await ObtenerPorId(cita.Id) ?? throw new Exception("Error");
         }
@@ -156,6 +182,11 @@ namespace Syspharma.Data.Repositories
         {
             var c = await _context.Citas.FindAsync(id);
             if (c == null) return false;
+
+            var estadoDestino = await _context.EstadosCita.FindAsync(estadoId);
+            if (estadoDestino != null && estadoDestino.Nombre == "Pagada" && c.VentaId == null)
+                throw new Exception("El estado 'Pagada' no se puede asignar manualmente: se marca automáticamente al cobrar la cita mediante una venta.");
+
             c.EstadoId = estadoId;
             await _context.SaveChangesAsync();
             return true;
@@ -165,6 +196,10 @@ namespace Syspharma.Data.Repositories
         {
             var c = await _context.Citas.FindAsync(id);
             if (c == null) return false;
+
+            if (c.VentaId.HasValue)
+                throw new Exception("No se puede eliminar una cita que ya fue pagada: perderías la trazabilidad de a qué cita corresponde esa venta.");
+
             _context.Citas.Remove(c);
             await _context.SaveChangesAsync();
             return true;

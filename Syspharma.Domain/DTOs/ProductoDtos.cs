@@ -27,9 +27,10 @@ namespace Syspharma.Domain.DTOs
         public DateTime? UltimaActualizacion { get; set; }
         public DateOnly? FechaVencimientoProxima { get; set; }
 
-        // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public ProductoMedicamentoDto? Medicamento { get; set; }
         public List<LoteDto> Lotes { get; set; } = new();
+
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
     public class ProductoCreateDto
@@ -72,9 +73,10 @@ namespace Syspharma.Domain.DTOs
 
         public string? Imagen { get; set; }
 
-        // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public bool EsMedicamento { get; set; } = false;
         public ProductoMedicamentoDto? Medicamento { get; set; }
+
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
     public class ProductoUpdateDto
@@ -120,29 +122,19 @@ namespace Syspharma.Domain.DTOs
 
         public string? Imagen { get; set; }
 
-        // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public bool EsMedicamento { get; set; } = false;
         public ProductoMedicamentoDto? Medicamento { get; set; }
+
+        public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
-    // Subconjunto seguro de ProductoDto para el catálogo público (sin costos ni datos de proveedor).
-    public class ProductoPublicoDto
+    public class ProductoFormaVentaDto
     {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = null!;
+        public int? Id { get; set; }
+        public string Tipo { get; set; } = null!;
         public decimal Precio { get; set; }
-        public int Stock { get; set; }
-        public string? Imagen { get; set; }
-        public string? Categoria { get; set; }
-        public string? Marca { get; set; }
-        public string? Presentacion { get; set; }
-        public string TipoProducto { get; set; } = null!;
-        public string? Composicion { get; set; }
-        public string? Concentracion { get; set; }
-        public string? ViaAdministracion { get; set; }
-        public string? RegistroSanitario { get; set; }
-        public bool RequiereFormula { get; set; }
-        public bool Estado { get; set; }
+        public int FactorUnidades { get; set; }
+        public bool Activo { get; set; } = true;
     }
 
     public class LoteDto

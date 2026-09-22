@@ -6,6 +6,7 @@ using Syspharma.Domain.DTOs;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -20,7 +21,6 @@ namespace Syspharma.API.Controllers
             _service = service;
         }
 
-        // GET /api/Marca
         [HttpGet]
         public async Task<IActionResult> ObtenerTodos([FromQuery] string? estado = null)
         {
@@ -63,6 +63,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("brands.create")]
         public async Task<IActionResult> Crear([FromBody] MarcaCreateDto dto)
         {
             try
@@ -77,6 +78,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("brands.edit")]
         public async Task<IActionResult> Actualizar([FromBody] MarcaUpdateDto dto)
         {
             try
@@ -91,6 +93,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("brands.status")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             try
@@ -105,6 +108,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("brands.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             try

@@ -11,9 +11,9 @@ namespace Syspharma.Data.Repositories
         Task<UsuarioDto?> ObtenerPorId(int id);
         Task<UsuarioDto> Crear(UsuarioCreateDto dto);
         Task<UsuarioDto> Actualizar(UsuarioUpdateDto dto);
-        Task<UsuarioDto> CambiarEstado(int id, bool estado); // <-- añadido
+        Task<UsuarioDto> CambiarEstado(int id, bool estado);
         Task<bool> Eliminar(int id);
-        Task<UsuarioDto> ActualizarAvatar(int id, string avatar); // <-- nuevo
+        Task<UsuarioDto> ActualizarAvatar(int id, string avatar);
     }
 
     public class UsuarioRepository : IUsuarioRepository
@@ -34,6 +34,7 @@ namespace Syspharma.Data.Repositories
             TipoDocumento = u.TipoDocumento?.Nombre,
             TipoDocumentoId = u.TipoDocumentoId,
             Telefono = u.Telefono,
+            Direccion = u.Direccion,
             RolNombre = u.Role?.Nombre ?? "",
             Avatar = u.Avatar,
             Estado = u.Estado,
@@ -42,7 +43,6 @@ namespace Syspharma.Data.Repositories
 
         public async Task<List<UsuarioDto>> ObtenerTodos()
         {
-            // ✅ CAMBIO 1: quitar el filtro por Estado para devolver activos e inactivos
             var usuarios = await _context.Usuarios
                 .Include(u => u.Role)
                 .Include(u => u.TipoDocumento)
@@ -108,14 +108,19 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(u => u.Id == dto.Id);
             if (usuario == null) throw new Exception("Usuario no encontrado");
 
+            var esAdministrador = usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false;
+            if (!dto.Estado && esAdministrador)
+                throw new Exception("No se puede desactivar a un usuario con rol Administrador.");
+
             usuario.Nombre = dto.Nombre;
             usuario.Email = dto.Email;
             usuario.TipoDocumentoId = dto.TipoDocumentoId;
             usuario.Documento = dto.Documento;
             usuario.Telefono = dto.Telefono;
+            usuario.Direccion = dto.Direccion;
             usuario.RoleId = dto.RolId;
             usuario.Estado = dto.Estado;
-            usuario.Avatar = dto.Avatar ?? usuario.Avatar; // ← línea añadida
+            usuario.Avatar = dto.Avatar ?? usuario.Avatar;
 
             await _context.SaveChangesAsync();
             return MapDto(usuario);
@@ -130,6 +135,9 @@ namespace Syspharma.Data.Repositories
             if (usuario == null)
                 throw new Exception("Usuario no encontrado");
 
+            if (!estado && (usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false))
+                throw new Exception("No se puede desactivar a un usuario con rol Administrador.");
+
             usuario.Estado = estado;
             await _context.SaveChangesAsync();
             return MapDto(usuario);
@@ -137,11 +145,15 @@ namespace Syspharma.Data.Repositories
 
         public async Task<bool> Eliminar(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
+            var usuario = await _context.Usuarios
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == id);
             if (usuario == null)
                 throw new Exception("Usuario no encontrado");
 
-            // ✅ CAMBIO 2: borrado físico en la base de datos
+            if (usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false)
+                throw new Exception("No se puede eliminar a un usuario con rol Administrador. Desactívalo primero si ya no debe tener acceso, o cámbiale el rol.");
+
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
             return true;

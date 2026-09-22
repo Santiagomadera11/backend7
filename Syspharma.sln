@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -10,10 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syspharma.Data", "Syspharma.Data\Syspharma.Data.csproj", "{BF59CB34-9E64-451D-9F8A-1F25C3CA4BD2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syspharma.Domain", "Syspharma.Domain\Syspharma.Domain.csproj", "{EFD16E9F-C2F2-4692-B9F4-204390836980}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syspharma.Tests", "Syspharma.Tests\Syspharma.Tests.csproj", "{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Syspharma.Business.Tests", "Syspharma.Business.Tests\Syspharma.Business.Tests.csproj", "{2A3543E0-9E64-4870-8760-1A07037D283C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,48 +69,11 @@ Global
 		{EFD16E9F-C2F2-4692-B9F4-204390836980}.Release|x64.Build.0 = Release|Any CPU
 		{EFD16E9F-C2F2-4692-B9F4-204390836980}.Release|x86.ActiveCfg = Release|Any CPU
 		{EFD16E9F-C2F2-4692-B9F4-204390836980}.Release|x86.Build.0 = Release|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Debug|x64.Build.0 = Debug|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Debug|x86.Build.0 = Debug|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Release|x64.ActiveCfg = Release|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Release|x64.Build.0 = Release|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Release|x86.ActiveCfg = Release|Any CPU
-		{7ADDD192-B688-48BD-B3F2-03A59F33AB0B}.Release|x86.Build.0 = Release|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Debug|x64.Build.0 = Debug|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Debug|x86.Build.0 = Debug|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Release|x64.ActiveCfg = Release|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Release|x64.Build.0 = Release|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Release|x86.ActiveCfg = Release|Any CPU
-		{2A3543E0-9E64-4870-8760-1A07037D283C}.Release|x86.Build.0 = Release|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Debug|x64.Build.0 = Debug|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Debug|x86.Build.0 = Debug|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Release|x64.ActiveCfg = Release|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Release|x64.Build.0 = Release|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Release|x86.ActiveCfg = Release|Any CPU
-		{D3E4A431-BDCB-40D7-9FEF-9BF0AE0138DA}.Release|x86.Build.0 = Release|Any CPU0986e8d14622f9ea4611faafb467c6da85159591
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A0B41402-81AD-4DAD-9BB7-40B26B233045}
-		SolutionGuid = {F7AB2086-8724-4D22-9040-E5BE3FB44B5B}0986e8d14622f9ea4611faafb467c6da85159591
 	EndGlobalSection
 EndGlobal

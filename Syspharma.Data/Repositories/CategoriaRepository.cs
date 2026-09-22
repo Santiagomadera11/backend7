@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +12,7 @@ namespace Syspharma.Data.Repositories
     public interface ICategoriaRepository
     {
         Task<List<CategoriaDto>> ObtenerTodos();
-        Task<List<CategoriaDto>> ObtenerTodosConInactivos(); // para la página de gestión de categorías
+        Task<List<CategoriaDto>> ObtenerTodosConInactivos();
         Task<CategoriaDto?> ObtenerPorId(int id);
         Task<CategoriaDto> Crear(CategoriaCreateDto dto);
         Task<CategoriaDto> Actualizar(CategoriaUpdateDto dto);
@@ -33,7 +33,6 @@ namespace Syspharma.Data.Repositories
             Estado = c.Estado
         };
 
-        // BUG 2 FIX: solo devuelve activas — para dropdowns de productos, compras, etc.
         public async Task<List<CategoriaDto>> ObtenerTodos()
         {
             var lista = await _context.Categorias
@@ -42,9 +41,6 @@ namespace Syspharma.Data.Repositories
             return lista.Select(ToDto).ToList();
         }
 
-        // Para la página de gestión de categorías donde sí se necesitan ver todas.
-        // El conteo de productos se calcula con un GROUP BY liviano en vez de
-        // traer la tabla de productos completa (con todos sus joins) al cliente.
         public async Task<List<CategoriaDto>> ObtenerTodosConInactivos()
         {
             var lista = await _context.Categorias.ToListAsync();
@@ -99,14 +95,12 @@ namespace Syspharma.Data.Repositories
             var c = await _context.Categorias.FindAsync(id);
             if (c == null) return false;
 
-            // --- NUEVO: Validar si la categoría está en uso por algún producto ---
             var tieneProductos = await _context.Productos.AnyAsync(p => p.CategoriaId == id);
             if (tieneProductos)
             {
                 throw new Exception("No se puede eliminar la categoría porque está relacionada a un producto.");
             }
 
-            // --- NUEVO: Validar si la categoría está en uso por algún servicio ---
             var tieneServicios = await _context.Servicios.AnyAsync(s => s.CategoriaId == id);
             if (tieneServicios)
             {

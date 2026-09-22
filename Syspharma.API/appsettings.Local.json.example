@@ -9,5 +9,10 @@
     "User": "tu-correo@gmail.com",
     "Password": "tu-contraseña-de-aplicacion-de-gmail",
     "From": "tu-correo@gmail.com"
+  },
+  "Cloudinary": {
+    "CloudName": "tu-cloud-name",
+    "ApiKey": "tu-api-key",
+    "ApiSecret": "tu-api-secret"
   }
 }

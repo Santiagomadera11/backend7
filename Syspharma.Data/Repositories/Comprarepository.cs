@@ -87,7 +87,6 @@ namespace Syspharma.Data.Repositories
             if (dto.Detalles == null || !dto.Detalles.Any())
                 throw new Exception("La compra debe contener al menos un producto.");
 
-            // Validaciones de medicamentos y valores numéricos
             foreach (var det in dto.Detalles)
             {
                 if (det.Cantidad <= 0)
@@ -141,6 +140,10 @@ namespace Syspharma.Data.Repositories
 
             _context.Compras.Add(compra);
             await _context.SaveChangesAsync();
+
+            compra.NumeroCompra = $"COM-{compra.Id:D5}";
+            await _context.SaveChangesAsync();
+
             return await ObtenerPorId(compra.Id) ?? MapDto(compra);
         }
 
@@ -151,7 +154,15 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(c => c.Id == dto.Id)
                 ?? throw new Exception("Compra no encontrada");
 
-            // Validaciones de medicamentos
+            var estadoRecibida = await _context.EstadosCompras.FirstOrDefaultAsync(e => e.Nombre.ToLower() == "recibida");
+            if (estadoRecibida != null)
+            {
+                if (compra.EstadoId == estadoRecibida.Id)
+                    throw new Exception("No se puede editar una compra ya recibida: ya generó stock y lotes reales. Si necesitas corregirla, primero cámbiala a otro estado (esto revierte el stock/lotes, o se bloqueará si ya se vendió algo), corrígela, y vuelve a marcarla como recibida.");
+                if (dto.EstadoId == estadoRecibida.Id)
+                    throw new Exception("Para marcar una compra como recibida usa el botón de cambiar estado, no la edición: solo ese flujo genera los lotes y el stock correspondiente.");
+            }
+
             foreach (var det in dto.Detalles)
             {
                 var prod = await _context.Productos
@@ -175,7 +186,6 @@ namespace Syspharma.Data.Repositories
             compra.Observaciones = dto.Observaciones;
             compra.FechaEntrega = dto.FechaEntrega;
 
-            // Reemplazar detalles
             _context.CompraDetalles.RemoveRange(compra.CompraDetalles);
 
             var subtotal = dto.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario);
@@ -206,12 +216,37 @@ namespace Syspharma.Data.Repositories
 
             if (c == null) return false;
 
-            c.EstadoId = estadoId;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
 
             var estadoRecibida = await _context.EstadosCompras.FirstOrDefaultAsync(e => e.Nombre.ToLower() == "recibida");
-            if (estadoRecibida != null && estadoId == estadoRecibida.Id)
+            var eraRecibida = estadoRecibida != null && c.EstadoId == estadoRecibida.Id;
+            var seraRecibida = estadoRecibida != null && estadoId == estadoRecibida.Id;
+
+            if (eraRecibida && !seraRecibida)
             {
-                // Crear lotes si no han sido creados previamente
+                var lotes = await _context.Lotes.Where(l => l.CompraId == id).ToListAsync();
+                if (lotes.Any())
+                {
+                    var loteIds = lotes.Select(l => l.Id).ToList();
+                    var yaVendido = await _context.VentaDetalleLotes.AnyAsync(vdl => loteIds.Contains(vdl.LoteId));
+                    if (yaVendido)
+                        throw new Exception("No se puede cambiar el estado: ya se vendieron unidades de los lotes generados por esta compra. Anula esas ventas primero si necesitas revertir la recepción.");
+
+                    foreach (var lote in lotes)
+                    {
+                        var prod = await _context.Productos.FindAsync(lote.ProductoId);
+                        if (prod != null) prod.Stock -= lote.Cantidad;
+                    }
+                    _context.Lotes.RemoveRange(lotes);
+                }
+            }
+
+            c.EstadoId = estadoId;
+
+            if (seraRecibida && !eraRecibida)
+            {
                 if (!await _context.Lotes.AnyAsync(l => l.CompraId == id))
                 {
                     foreach (var det in c.CompraDetalles)
@@ -228,7 +263,6 @@ namespace Syspharma.Data.Repositories
                         };
                         _context.Lotes.Add(lote);
 
-                        // Incrementar el stock global del producto
                         var prod = await _context.Productos.FindAsync(det.ProductoId);
                         if (prod != null)
                         {
@@ -239,7 +273,14 @@ namespace Syspharma.Data.Repositories
             }
 
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
             return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<bool> Eliminar(int id)
@@ -248,6 +289,10 @@ namespace Syspharma.Data.Repositories
                 .Include(c => c.CompraDetalles)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (compra == null) return false;
+
+            var tieneLotes = await _context.Lotes.AnyAsync(l => l.CompraId == id);
+            if (tieneLotes)
+                throw new Exception("No se puede eliminar una compra que ya generó lotes de inventario. Cambia su estado fuera de 'Recibida' primero (revierte el stock/lotes) y luego elimínala.");
 
             _context.CompraDetalles.RemoveRange(compra.CompraDetalles);
             _context.Compras.Remove(compra);

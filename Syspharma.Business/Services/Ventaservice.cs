@@ -16,7 +16,6 @@ namespace Syspharma.Business.Services
         Task<List<EstadoVentaDto>> ObtenerEstados();
         Task<bool> CambiarEstado(int id, int estadoId);
         Task<bool> Anular(int id);
-        Task<VentaDto> CrearDesdePedido(int pedidoId);
     }
 
     public class VentaService : IVentaService
@@ -29,128 +28,6 @@ namespace Syspharma.Business.Services
             _context = context;
             _mapper = mapper;
         }
-        public async Task<VentaDto> CrearDesdePedido(int pedidoId)
-        {
-            // 1. Cargar el pedido con sus detalles
-            var pedido = await _context.Pedidos
-                .Include(p => p.PedidoDetalles)
-                    .ThenInclude(d => d.Producto)
-                .Include(p => p.MetodoPago)
-                .Include(p => p.Usuario)
-                .FirstOrDefaultAsync(p => p.Id == pedidoId)
-                ?? throw new Exception($"Pedido con ID {pedidoId} no encontrado.");
-
-            // 2. Buscar el turno activo
-            // El turno activo es el que tiene estado = "activo" más reciente.
-            var turnoActivo = await _context.Turnos
-                .Where(t => t.Estado == "activo")
-                .OrderByDescending(t => t.FechaApertura)
-                .FirstOrDefaultAsync()
-                ?? throw new Exception(
-                    "No hay un turno (caja) activo. Abrí un turno antes de marcar el pedido como Entregado.");
-
-            // 3. Buscar estado "Completada" en ventas
-            var estadoCompletada = await _context.EstadosVenta
-                .FirstOrDefaultAsync(e => e.Nombre == "Completada")
-                ?? throw new Exception("No se encontró el estado 'Completada' en la tabla estados_venta.");
-
-
-            int metodoPagoId;
-            if (pedido.MetodoPagoId.HasValue)
-            {
-                metodoPagoId = pedido.MetodoPagoId.Value;
-            }
-            else
-            {
-                var metodoPorDefecto = await _context.MetodosPagos
-                    .Where(m => m.Estado == true)
-                    .OrderBy(m => m.Id)
-                    .FirstOrDefaultAsync()
-                    ?? throw new Exception("No hay métodos de pago disponibles en el sistema.");
-
-                metodoPagoId = metodoPorDefecto.Id;
-            }
-
-            // 5. Validar que haya detalles con ProductoId (no nulo)
-            var detallesValidos = pedido.PedidoDetalles
-                .Where(d => d.ProductoId.HasValue)
-                .ToList();
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                // 6. Crear la Venta
-                var venta = new Venta
-                {
-                    NumeroVenta = $"VNT-{DateTime.Now:yyyyMMddHHmmss}-P{pedido.Id}",
-                    TurnoId = turnoActivo.Id,
-                    // UsuarioId: usar el del pedido si existe, si no el que abrió el turno
-                    UsuarioId = pedido.UsuarioId ?? turnoActivo.UsuarioId,
-                    ClienteNombre = string.IsNullOrWhiteSpace(pedido.ClienteNombre)
-                        ? "Consumidor Final"
-                        : pedido.ClienteNombre,
-                    ClienteDocumento = pedido.ClienteDocumento,
-                    ClienteTelefono = pedido.ClienteTelefono,
-                    MetodoPagoId = metodoPagoId,
-                    EstadoId = estadoCompletada.Id,
-                    Subtotal = pedido.Subtotal,
-                    Iva = pedido.Iva,
-                    PorcentajeIva = 0, // ajustá si tu Pedido guarda el porcentaje
-                    Total = pedido.Total,
-                    Notas = $"Generada automáticamente desde pedido {pedido.NumeroPedido}",
-                    FechaVenta = DateTime.Now,
-                    Origen = "WEB",
-                    PedidoId = pedido.Id
-                };
-
-                _context.Ventas.Add(venta);
-                await _context.SaveChangesAsync(); // necesitamos el Id de la venta
-
-                // 7. Copiar los detalles de PedidoDetalle → VentaDetalle
-                foreach (var detalle in detallesValidos)
-                {
-                    // Validar stock
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId!.Value);
-                    if (producto != null)
-                    {
-                        if (producto.Stock < detalle.Cantidad)
-                            throw new Exception(
-                                $"Stock insuficiente para '{producto.Nombre}'. " +
-                                $"Disponible: {producto.Stock}, requerido: {detalle.Cantidad}.");
-
-                        producto.Stock -= detalle.Cantidad;
-                        producto.UltimaActualizacion = DateTime.Now;
-                    }
-
-                    _context.VentaDetalles.Add(new VentaDetalle
-                    {
-                        VentaId = venta.Id,
-                        ProductoId = detalle.ProductoId!.Value,
-                        Cantidad = detalle.Cantidad,
-                        PrecioUnitario = detalle.PrecioUnitario,
-                        Descuento = 0,
-                        Subtotal = detalle.Subtotal
-                    });
-                }
-
-                // 8. Actualizar totales del turno
-                turnoActivo.TotalVentas += pedido.Total;
-                turnoActivo.ResumenVentas += 1;
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return await ObtenerPorId(venta.Id)
-                    ?? _mapper.Map<VentaDto>(venta);
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-
         public async Task<List<VentaDto>> ObtenerTodos()
         {
             try
@@ -160,6 +37,8 @@ namespace Syspharma.Business.Services
                     .Include(v => v.MetodoPago)
                     .Include(v => v.Usuario)
                     .Include(v => v.VentaDetalles).ThenInclude(d => d.Producto)
+                    .Include(v => v.VentaDetalles).ThenInclude(d => d.Lote)
+                    .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes).ThenInclude(vdl => vdl.Lote)
                     .Include(v => v.VentaDetallesServicios).ThenInclude(s => s.Servicio)
                     .OrderByDescending(v => v.FechaVenta)
                     .ToListAsync();
@@ -180,6 +59,8 @@ namespace Syspharma.Business.Services
                 .Include(v => v.MetodoPago)
                 .Include(v => v.Usuario)
                 .Include(v => v.VentaDetalles).ThenInclude(d => d.Producto)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lote)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes).ThenInclude(vdl => vdl.Lote)
                 .Include(v => v.VentaDetallesServicios).ThenInclude(s => s.Servicio)
                 .FirstOrDefaultAsync(v => v.Id == id);
 
@@ -188,15 +69,22 @@ namespace Syspharma.Business.Services
 
         public async Task<VentaDto> Crear(VentaCreateDto dto)
         {
-            if (dto.TurnoId <= 0)
+            var usuario = await _context.Usuarios.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == dto.UsuarioId);
+            var esAdministrador = usuario != null && usuario.Role.Nombre == "Administrador";
+
+            Turno? turno = null;
+            if (dto.TurnoId.HasValue && dto.TurnoId.Value > 0)
+            {
+                turno = await _context.Turnos.FindAsync(dto.TurnoId.Value);
+                if (turno == null)
+                    throw new Exception($"El turno con ID {dto.TurnoId} no existe en la base de datos. Por favor, cierre sesión y vuelva a entrar.");
+                if (turno.Estado != "activo")
+                    throw new Exception("El turno (caja) seleccionado no está activo o ya ha sido cerrado. Por favor, abra un turno de caja antes de registrar ventas.");
+            }
+            else if (!esAdministrador)
+            {
                 throw new Exception("No se puede crear la venta: El ID de Turno no es válido (0). Asegúrese de tener una caja abierta.");
-
-            var turno = await _context.Turnos.FindAsync(dto.TurnoId);
-            if (turno == null)
-                throw new Exception($"El turno con ID {dto.TurnoId} no existe en la base de datos. Por favor, cierre sesión y vuelva a entrar.");
-
-            if (turno.Estado != "activo")
-                throw new Exception("El turno (caja) seleccionado no está activo o ya ha sido cerrado. Por favor, abra un turno de caja antes de registrar ventas.");
+            }
 
             var metodoPago = await _context.MetodosPagos.FindAsync(dto.MetodoPagoId);
             if (metodoPago == null)
@@ -212,10 +100,13 @@ namespace Syspharma.Business.Services
                 decimal ivaFinal = Math.Round(subtotalFinal * (porcentajeIva / 100), 2);
                 decimal totalFinal = subtotalFinal + ivaFinal;
 
+                decimal ivaProd = Math.Round(subtotalProd * (porcentajeIva / 100), 2);
+                decimal totalProductos = subtotalProd + ivaProd;
+
                 var venta = new Venta
                 {
                     NumeroVenta = $"VNT-{DateTime.Now:yyyyMMddHHmmss}",
-                    TurnoId = dto.TurnoId,
+                    TurnoId = turno?.Id,
                     UsuarioId = dto.UsuarioId,
                     ClienteNombre = string.IsNullOrWhiteSpace(dto.ClienteNombre) ? "Consumidor Final" : dto.ClienteNombre,
                     ClienteDocumento = dto.ClienteDocumento,
@@ -227,11 +118,9 @@ namespace Syspharma.Business.Services
                     Notas = dto.Notas,
                     FechaVenta = DateTime.Now,
                     Origen = string.IsNullOrWhiteSpace(dto.Origen) ? "CAJA" : dto.Origen,
-                    PedidoId = dto.PedidoId,
                     ReferenciasPago = dto.ReferenciasPago
                 };
 
-                // ✔ Usar la propiedad enviada por el cliente para calcular IVA
                 venta.Iva = venta.Subtotal * (venta.PorcentajeIva / 100.0m);
                 venta.Total = venta.Subtotal + venta.Iva;
 
@@ -249,7 +138,29 @@ namespace Syspharma.Business.Services
                         if (d.Descuento < 0 || d.Descuento > d.Cantidad * d.PrecioUnitario)
                             throw new Exception("El descuento no puede ser negativo ni mayor al subtotal del producto.");
 
-                        _context.VentaDetalles.Add(new VentaDetalle
+                        Syspharma.Data.Entities.ProductoFormaVenta? formaVenta = null;
+                        int factor = 1;
+                        if (d.FormaVentaId.HasValue)
+                        {
+                            formaVenta = await _context.ProductoFormasVenta
+                                .FirstOrDefaultAsync(f => f.Id == d.FormaVentaId.Value && f.ProductoId == d.ProductoId);
+                            if (formaVenta == null || !formaVenta.Activo)
+                                throw new Exception($"La forma de venta seleccionada para el producto no existe o fue deshabilitada.");
+                            factor = formaVenta.FactorUnidades;
+                        }
+
+                        var unidadesADescontar = d.Cantidad * factor;
+
+                        var producto = await _context.Productos.FindAsync(d.ProductoId);
+                        if (producto != null)
+                        {
+                            if (producto.Stock < unidadesADescontar)
+                                throw new Exception($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.Stock}, solicitado: {unidadesADescontar}.");
+                            producto.Stock -= unidadesADescontar;
+                            producto.UltimaActualizacion = DateTime.Now;
+                        }
+
+                        var detalleEntity = new VentaDetalle
                         {
                             VentaId = venta.Id,
                             ProductoId = d.ProductoId,
@@ -257,28 +168,59 @@ namespace Syspharma.Business.Services
                             PrecioUnitario = d.PrecioUnitario,
                             Descuento = d.Descuento,
                             Subtotal = (d.Cantidad * d.PrecioUnitario) - d.Descuento,
-                            LoteId = d.LoteId
-                        });
+                            FormaVentaId = formaVenta?.Id,
+                            FormaVentaTipo = formaVenta?.Tipo,
+                            FactorUnidades = factor
+                        };
 
-                        var producto = await _context.Productos.FindAsync(d.ProductoId);
-                        if (producto != null)
-                        {
-                            if (producto.Stock < d.Cantidad)
-                                throw new Exception($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.Stock}, solicitado: {d.Cantidad}.");
-                            producto.Stock -= d.Cantidad;
-                            producto.UltimaActualizacion = DateTime.Now;
-                        }
+                        int? loteIdAsignado = d.LoteId;
 
-                        if (d.LoteId.HasValue && d.LoteId.Value > 0)
+                        var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
+
+                        if (loteIdAsignado.HasValue && loteIdAsignado.Value > 0)
                         {
-                            var lote = await _context.Lotes.FindAsync(d.LoteId.Value);
+                            var lote = await _context.Lotes.FindAsync(loteIdAsignado.Value);
                             if (lote != null)
                             {
-                                if (lote.Cantidad < d.Cantidad)
-                                    throw new Exception($"Stock insuficiente en el lote '{lote.NumeroLote}' para '{producto?.Nombre ?? "Producto"}'. Disponible: {lote.Cantidad}, solicitado: {d.Cantidad}.");
-                                lote.Cantidad -= d.Cantidad;
+                                if (lote.FechaVencimiento < hoyDateOnly)
+                                    throw new Exception($"No se puede vender del lote '{lote.NumeroLote}' de '{producto?.Nombre ?? "Producto"}': está vencido desde {lote.FechaVencimiento:yyyy-MM-dd}.");
+                                if (lote.Cantidad < unidadesADescontar)
+                                    throw new Exception($"Stock insuficiente en el lote '{lote.NumeroLote}' para '{producto?.Nombre ?? "Producto"}'. Disponible: {lote.Cantidad}, solicitado: {unidadesADescontar}.");
+                                lote.Cantidad -= unidadesADescontar;
+                                detalleEntity.Lotes.Add(new VentaDetalleLote { LoteId = lote.Id, Cantidad = unidadesADescontar });
                             }
                         }
+                        else
+                        {
+                            var lotesActivos = await _context.Lotes
+                                .Where(l => l.ProductoId == d.ProductoId
+                                            && l.Cantidad > 0
+                                            && l.FechaVencimiento >= hoyDateOnly)
+                                .OrderBy(l => l.FechaVencimiento)
+                                .ToListAsync();
+
+                            var pendiente = unidadesADescontar;
+                            foreach (var lote in lotesActivos)
+                            {
+                                if (pendiente <= 0) break;
+                                var aDescontar = Math.Min(lote.Cantidad, pendiente);
+                                lote.Cantidad -= aDescontar;
+                                pendiente -= aDescontar;
+                                detalleEntity.Lotes.Add(new VentaDetalleLote { LoteId = lote.Id, Cantidad = aDescontar });
+                                loteIdAsignado ??= lote.Id;
+                            }
+
+                            if (pendiente > 0)
+                            {
+                                var tieneLotesRegistrados = await _context.Lotes.AnyAsync(l => l.ProductoId == d.ProductoId);
+                                if (tieneLotesRegistrados)
+                                    throw new Exception($"No se puede vender '{producto?.Nombre ?? "el producto"}': faltan {pendiente} unidades de stock vigente (no vencido). El resto del inventario registrado está vencido.");
+                            }
+                        }
+
+                        detalleEntity.LoteId = loteIdAsignado;
+
+                        _context.VentaDetalles.Add(detalleEntity);
                     }
                 }
 
@@ -300,13 +242,29 @@ namespace Syspharma.Business.Services
                             Cantidad = s.Cantidad,
                             PrecioUnitario = s.PrecioUnitario,
                             Descuento = s.Descuento,
-                            Subtotal = (s.Cantidad * s.PrecioUnitario) - s.Descuento
+                            Subtotal = (s.Cantidad * s.PrecioUnitario) - s.Descuento,
+                            CitaId = s.CitaId
                         });
+
+                        if (s.CitaId.HasValue && s.CitaId.Value > 0)
+                        {
+                            var cita = await _context.Citas.FindAsync(s.CitaId.Value);
+                            if (cita != null)
+                            {
+                                cita.VentaId = venta.Id;
+                                var estadoPagada = await _context.EstadosCita.FirstOrDefaultAsync(e => e.Nombre == "Pagada");
+                                if (estadoPagada != null)
+                                    cita.EstadoId = estadoPagada.Id;
+                            }
+                        }
                     }
                 }
 
-                turno.TotalVentas += totalFinal;
-                turno.ResumenVentas += 1;
+                if (turno != null)
+                {
+                    turno.TotalVentas += totalProductos;
+                    turno.ResumenVentas += 1;
+                }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -329,7 +287,6 @@ namespace Syspharma.Business.Services
             return await ObtenerPorId(venta.Id) ?? _mapper.Map<VentaDto>(venta);
         }
 
-
         public async Task<bool> Eliminar(int id)
         {
             var v = await _context.Ventas
@@ -337,6 +294,10 @@ namespace Syspharma.Business.Services
                 .Include(v => v.VentaDetallesServicios)
                 .FirstOrDefaultAsync(v => v.Id == id);
             if (v == null) return false;
+
+            if (v.EstadoId != 3)
+                throw new Exception("Solo se puede eliminar una venta que ya fue anulada. Anúlala primero para revertir su stock, sus lotes y su efecto en el turno.");
+
             _context.VentaDetalles.RemoveRange(v.VentaDetalles);
             _context.VentaDetalleServicios.RemoveRange(v.VentaDetallesServicios);
             _context.Ventas.Remove(v);
@@ -354,6 +315,12 @@ namespace Syspharma.Business.Services
         {
             var v = await _context.Ventas.FindAsync(id);
             if (v == null) return false;
+
+            if (estadoId == 3 || v.EstadoId == 3)
+                throw new Exception("Para anular o reactivar una venta anulada, usa el endpoint de anulación, no este.");
+            if (estadoId == 2 || v.EstadoId == 2)
+                throw new Exception("El estado 'Devolución' solo cambia a través del módulo de Devoluciones.");
+
             v.EstadoId = estadoId;
             await _context.SaveChangesAsync();
             return true;
@@ -362,7 +329,8 @@ namespace Syspharma.Business.Services
         public async Task<bool> Anular(int id)
         {
             var venta = await _context.Ventas
-                .Include(v => v.VentaDetalles)
+                .Include(v => v.VentaDetalles).ThenInclude(d => d.Lotes)
+                .Include(v => v.VentaDetallesServicios)
                 .Include(v => v.Turno)
                 .FirstOrDefaultAsync(v => v.Id == id)
                 ?? throw new Exception("La venta no existe.");
@@ -373,27 +341,65 @@ namespace Syspharma.Business.Services
             if (venta.EstadoId == 2)
                 throw new Exception("No se puede anular una venta con devolución aprobada.");
 
+            if (venta.Turno != null && venta.Turno.Estado.Contains("cerrado"))
+                throw new Exception("No se puede anular esta venta: pertenece a un turno que ya fue cerrado y su cuadre de caja ya quedó registrado.");
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Cambiar estado a anulada (3)
                 venta.EstadoId = 3;
 
-                // 2. Devolver stock de cada producto
                 foreach (var detalle in venta.VentaDetalles)
                 {
                     var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                     if (producto != null)
                     {
-                        producto.Stock += detalle.Cantidad;
+                        producto.Stock += detalle.Cantidad * detalle.FactorUnidades;
                         producto.UltimaActualizacion = DateTime.Now;
+                    }
+
+                    if (detalle.Lotes != null && detalle.Lotes.Any())
+                    {
+                        foreach (var detalleLote in detalle.Lotes)
+                        {
+                            var lote = await _context.Lotes.FindAsync(detalleLote.LoteId);
+                            if (lote != null)
+                                lote.Cantidad += detalleLote.Cantidad;
+                        }
+                    }
+                    else if (detalle.LoteId.HasValue)
+                    {
+                        var lote = await _context.Lotes.FindAsync(detalle.LoteId.Value);
+                        if (lote != null)
+                            lote.Cantidad += detalle.Cantidad * detalle.FactorUnidades;
                     }
                 }
 
-                // 3. Restar del turno
+                if (venta.VentaDetallesServicios != null)
+                {
+                    var citaIds = venta.VentaDetallesServicios
+                        .Where(s => s.CitaId.HasValue)
+                        .Select(s => s.CitaId!.Value)
+                        .Distinct()
+                        .ToList();
+
+                    if (citaIds.Any())
+                    {
+                        var estadoCompletada = await _context.EstadosCita.FirstOrDefaultAsync(e => e.Nombre == "Completada");
+                        var citas = await _context.Citas.Where(c => citaIds.Contains(c.Id)).ToListAsync();
+                        foreach (var cita in citas)
+                        {
+                            cita.VentaId = null;
+                            if (estadoCompletada != null) cita.EstadoId = estadoCompletada.Id;
+                        }
+                    }
+                }
+
                 if (venta.Turno != null)
                 {
-                    venta.Turno.TotalVentas -= venta.Total;
+                    decimal subtotalProdAnulada = venta.VentaDetalles?.Sum(d => d.Subtotal) ?? 0;
+                    decimal ivaProdAnulada = Math.Round(subtotalProdAnulada * (venta.PorcentajeIva / 100m), 2);
+                    venta.Turno.TotalVentas -= subtotalProdAnulada + ivaProdAnulada;
                     if (venta.Turno.ResumenVentas > 0)
                         venta.Turno.ResumenVentas -= 1;
                 }

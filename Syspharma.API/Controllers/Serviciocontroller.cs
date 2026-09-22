@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -15,11 +16,9 @@ namespace Syspharma.API.Controllers
         public ServicioController(IServicioService service) => _service = service;
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerTodos() => Ok(await _service.ObtenerTodos());
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerPorId(int id)
         {
             var s = await _service.ObtenerPorId(id);
@@ -27,6 +26,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("services.create")]
         public async Task<IActionResult> Crear([FromBody] ServicioCreateDto dto)
         {
             try { return Ok(await _service.Crear(dto)); }
@@ -34,6 +34,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("services.edit")]
         public async Task<IActionResult> Actualizar([FromBody] ServicioUpdateDto dto)
         {
             try { return Ok(await _service.Actualizar(dto)); }
@@ -41,6 +42,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("services.status")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             try { await _service.CambiarEstado(id, estado); return Ok(new { message = "Estado actualizado" }); }
@@ -48,6 +50,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("services.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             try { await _service.Eliminar(id); return Ok(new { message = "Servicio eliminado correctamente" }); }

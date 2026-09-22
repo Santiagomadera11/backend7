@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Syspharma.Business.Services;
 using Syspharma.Data.Context;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -29,15 +30,6 @@ namespace Syspharma.API.Controllers
             return Ok(result);
         }
 
-        // Catálogo público (sin costos ni datos de proveedor) para landing/tienda sin sesión.
-        [HttpGet("publico")]
-        [AllowAnonymous]
-        public async Task<IActionResult> ObtenerCatalogoPublico()
-        {
-            var result = await _service.ObtenerCatalogoPublico();
-            return Ok(result);
-        }
-
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerPorId(int id)
         {
@@ -47,11 +39,11 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("products.create")]
         public async Task<IActionResult> Crear([FromBody] ProductoCreateDto dto)
         {
             try
             {
-                // El DTO recibido ya contiene opcionalmente las propiedades 'EsMedicamento' y 'Medicamento'
                 var result = await _service.Crear(dto);
                 return Ok(result);
             }
@@ -62,11 +54,11 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("products.edit")]
         public async Task<IActionResult> Actualizar([FromBody] ProductoUpdateDto dto)
         {
             try
             {
-                // Permite actualizar los datos básicos y los detalles de medicamento en una sola llamada
                 var result = await _service.Actualizar(dto);
                 return Ok(result);
             }
@@ -77,6 +69,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("products.status")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             try
@@ -91,6 +84,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("products.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             try
@@ -105,7 +99,6 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpGet("proximos-a-vencer")]
-        [AllowAnonymous]
         public async Task<IActionResult> ProximosAVencer([FromQuery] int? dias = null)
         {
             try
@@ -125,23 +118,30 @@ namespace Syspharma.API.Controllers
                 var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
                 var limiteDateOnly = hoyDateOnly.AddDays(diasLimite);
 
-                var productos = await _context.Productos
-                    .Where(p => p.Estado &&
-                                p.FechaVencimientoProxima != null &&
-                                p.FechaVencimientoProxima <= limiteDateOnly &&
-                                p.FechaVencimientoProxima >= hoyDateOnly)
-                    .Select(p => new
+                var items = await _context.Lotes
+                    .Where(l => l.Producto.Estado &&
+                                l.Cantidad > 0 &&
+                                l.FechaVencimiento <= limiteDateOnly)
+                    .Select(l => new
                     {
-                        p.Id,
-                        p.Nombre,
-                        p.Stock,
-                        FechaVencimiento = p.FechaVencimientoProxima,
-                        DiasRestantes = EF.Functions.DateDiffDay(hoyDateOnly, p.FechaVencimientoProxima!.Value)
+                        LoteId = l.Id,
+                        l.ProductoId,
+                        ProductoNombre = l.Producto.Nombre,
+                        l.NumeroLote,
+                        FechaVencimiento = l.FechaVencimiento,
+                        CantidadDisponible = l.Cantidad,
+                        DiasRestantes = EF.Functions.DateDiffDay(hoyDateOnly, l.FechaVencimiento)
                     })
-                    .OrderBy(p => p.FechaVencimiento)
+                    .OrderBy(l => l.FechaVencimiento)
                     .ToListAsync();
 
-                return Ok(productos);
+                return Ok(new
+                {
+                    diasAlerta = diasLimite,
+                    vencidos = items.Count(i => i.DiasRestantes < 0),
+                    porVencer = items.Count(i => i.DiasRestantes >= 0),
+                    items
+                });
             }
             catch (Exception ex)
             {

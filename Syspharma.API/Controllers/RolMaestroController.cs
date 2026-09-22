@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -23,12 +24,15 @@ namespace Syspharma.API.Controllers
         public async Task<IActionResult> GetById(int id) => Ok(await _service.ObtenerPorId(id));
 
         [HttpPost]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> Create([FromBody] RolMaestroDto dto) => Ok(await _service.Crear(dto));
 
         [HttpPut]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> Update([FromBody] RolMaestroDto dto) => Ok(await _service.Actualizar(dto));
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] RolMaestroEstadoDto dto)
         {
             try
@@ -45,6 +49,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -83,6 +88,7 @@ namespace Syspharma.API.Controllers
         public async Task<IActionResult> GetPermisos(int id) => Ok(await _service.ObtenerPermisos(id));
 
         [HttpPost("{id}/permisos")]
+        [RequirePermission("system.roles")]
         public async Task<IActionResult> AssignPermisos(int id, [FromBody] List<string> permisos)
             => Ok(await _service.AsignarPermisos(id, permisos));
     }

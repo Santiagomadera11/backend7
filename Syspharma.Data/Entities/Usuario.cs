@@ -32,8 +32,6 @@ public partial class Usuario : IdentityUser<int>
 
     public virtual ICollection<Gasto> Gastos { get; set; } = new List<Gasto>();
 
-    public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
-
     public virtual Role Role { get; set; } = null!;
 
     public virtual TiposDocumento? TipoDocumento { get; set; }

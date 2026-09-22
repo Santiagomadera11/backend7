@@ -21,8 +21,8 @@ namespace Syspharma.Data.Repositories
 
         public async Task<List<PermisoDto>> ObtenerTodos() => (await _context.Permisos.ToListAsync()).Select(p => new PermisoDto { Id = p.Id, Codigo = p.Codigo, Nombre = p.Nombre, Categoria = p.Categoria }).ToList();
         public async Task<PermisoDto?> ObtenerPorId(int id) { var p = await _context.Permisos.FindAsync(id); return p == null ? null : new PermisoDto { Id = p.Id, Codigo = p.Codigo }; }
-        public async Task<PermisoDto> Crear(PermisoCreateDto dto) { return null; }
-        public async Task<PermisoDto> Actualizar(PermisoUpdateDto dto) { return null; }
-        public async Task<bool> Eliminar(int id) { return true; }
+        public Task<PermisoDto> Crear(PermisoCreateDto dto) => throw new NotImplementedException();
+        public Task<PermisoDto> Actualizar(PermisoUpdateDto dto) => throw new NotImplementedException();
+        public Task<bool> Eliminar(int id) => throw new NotImplementedException();
     }
 }

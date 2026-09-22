@@ -44,7 +44,7 @@ namespace Syspharma.API.Filters
                         .ThenInclude(rp => rp.Permiso)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
-            if (usuario == null)
+            if (usuario == null || !usuario.Estado)
             {
                 context.Result = new UnauthorizedResult();
                 return;

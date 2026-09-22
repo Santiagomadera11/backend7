@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -19,6 +20,7 @@ namespace Syspharma.API.Controllers
             Ok(await _service.ObtenerHorario(medicoId));
 
         [HttpPost("horario")]
+        [RequirePermission("appointments.availability")]
         public async Task<IActionResult> GuardarHorario([FromBody] GuardarHorarioItemDto dto)
         {
             try
@@ -34,6 +36,7 @@ namespace Syspharma.API.Controllers
             Ok(await _service.ObtenerBloqueos(medicoId));
 
         [HttpPost("dias-no-disponibles")]
+        [RequirePermission("appointments.availability")]
         public async Task<IActionResult> CrearBloqueo([FromBody] BloqueoCreateDto dto)
         {
             try { return Ok(await _service.CrearBloqueo(dto)); }
@@ -45,6 +48,7 @@ namespace Syspharma.API.Controllers
             Ok(await _service.ObtenerSlots(medicoId, fecha));
 
         [HttpDelete("dias-no-disponibles/{id}")]
+        [RequirePermission("appointments.availability")]
         public async Task<IActionResult> EliminarBloqueo(int id)
         {
             var ok = await _service.EliminarBloqueo(id);

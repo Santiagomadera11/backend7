@@ -27,8 +27,6 @@ namespace Syspharma.API.Startup
             await SeedAdminUserAsync(userManager, context, roleAdmin);
         }
 
-        // Marcas de arranque de ejemplo — el admin puede agregar/editar/eliminar desde
-        // Inventario > Marcas. No representan un catálogo oficial ni datos recuperados.
         private static async Task SeedMarcasAsync(SyspharmaContext context)
         {
             if (await context.Marcas.AnyAsync()) return;
@@ -38,8 +36,6 @@ namespace Syspharma.API.Startup
             await context.SaveChangesAsync();
         }
 
-        // Presentaciones de arranque de ejemplo — el admin puede agregar/editar/eliminar
-        // desde Inventario > Presentaciones. No representan un catálogo oficial.
         private static async Task SeedPresentacionesAsync(SyspharmaContext context)
         {
             if (await context.Presentaciones.AnyAsync()) return;
@@ -52,10 +48,6 @@ namespace Syspharma.API.Startup
             await context.SaveChangesAsync();
         }
 
-        // Categorías farmacológicas solicitadas por el administrador, con su
-        // descripción para uso en el catálogo. Idempotente por nombre: solo
-        // inserta las que todavía no existan, así se puede correr en cualquier
-        // despliegue sin duplicar ni pisar categorías ya creadas manualmente.
         private static readonly (string Nombre, string Descripcion)[] CategoriasMedicamentos = new[]
         {
             ("Antipiréticos", "Su única función principal es bajar la fiebre. Ayudan a que el termostato de tu cuerpo regrese a su temperatura normal cuando estás enfermo."),
@@ -98,38 +90,23 @@ namespace Syspharma.API.Startup
             }
         }
 
-        // Nombres y orden de Id tomados de comparaciones/valores hardcodeados encontrados
-        // en el código (backend y frontend) — ver detalle en el mensaje de la conversación.
-        // Donde la evidencia era contradictoria (EstadosCita) se sembró un superset seguro:
-        // el código no falla por tener catálogos de más, sí por no encontrar el nombre que busca.
         private static async Task SeedCatalogosAsync(SyspharmaContext context)
         {
             if (!await context.EstadosVenta.AnyAsync())
             {
                 context.EstadosVenta.AddRange(
-                    new EstadosVentum { Nombre = "Completada" },   // id 1: usado como estado inicial de toda venta
-                    new EstadosVentum { Nombre = "Devolución" },   // id 2
-                    new EstadosVentum { Nombre = "Anulada" }       // id 3
-                );
-            }
-
-            if (!await context.EstadosPedidos.AnyAsync())
-            {
-                context.EstadosPedidos.AddRange(
-                    new EstadosPedido { Nombre = "Pendiente" },    // id 1
-                    new EstadosPedido { Nombre = "En proceso" },   // id 2
-                    new EstadosPedido { Nombre = "Listo" },        // id 3
-                    new EstadosPedido { Nombre = "Entregado" },    // id 4
-                    new EstadosPedido { Nombre = "Cancelado" }     // id 5
+                    new EstadosVentum { Nombre = "Completada" },
+                    new EstadosVentum { Nombre = "Devolución" },
+                    new EstadosVentum { Nombre = "Anulada" }
                 );
             }
 
             if (!await context.EstadosDevoluciones.AnyAsync())
             {
                 context.EstadosDevoluciones.AddRange(
-                    new EstadoDevolucion { Nombre = "Pendiente", Activo = true },  // id 1
-                    new EstadoDevolucion { Nombre = "Aprobada", Activo = true },   // id 2
-                    new EstadoDevolucion { Nombre = "Rechazada", Activo = true }   // id 3
+                    new EstadoDevolucion { Nombre = "Pendiente", Activo = true },
+                    new EstadoDevolucion { Nombre = "Aprobada", Activo = true },
+                    new EstadoDevolucion { Nombre = "Rechazada", Activo = true }
                 );
             }
 
@@ -153,11 +130,8 @@ namespace Syspharma.API.Startup
 
             if (!await context.EstadosCita.AnyAsync())
             {
-                // Evidencia contradictoria entre EmployeeCitas.jsx y ClientMisCitas.jsx:
-                // se incluye la unión de ambos sets. Revisar y depurar manualmente
-                // una vez confirmado cuál es el flujo de estados real de citas.
                 context.EstadosCita.AddRange(
-                    new EstadosCitum { Nombre = "Confirmar Asistencia" }, // id 1: asignado por defecto al crear cita
+                    new EstadosCitum { Nombre = "Confirmar Asistencia" },
                     new EstadosCitum { Nombre = "Confirmada" },
                     new EstadosCitum { Nombre = "En Consulta" },
                     new EstadosCitum { Nombre = "Completada" },
@@ -210,8 +184,7 @@ namespace Syspharma.API.Startup
             {
                 context.Roles.AddRange(
                     new Role { Nombre = "Administrador", Descripcion = "Acceso total al sistema", Estado = true, FechaCreacion = DateTime.Now },
-                    new Role { Nombre = "Empleado", Descripcion = "Personal operativo", Estado = true, FechaCreacion = DateTime.Now },
-                    new Role { Nombre = "Cliente", Descripcion = "Usuario cliente registrado desde la web", Estado = true, FechaCreacion = DateTime.Now }
+                    new Role { Nombre = "Empleado", Descripcion = "Personal operativo", Estado = true, FechaCreacion = DateTime.Now }
                 );
                 await context.SaveChangesAsync();
             }
@@ -219,8 +192,6 @@ namespace Syspharma.API.Startup
             return await context.Roles.FirstAsync(r => r.Nombre == "Administrador");
         }
 
-        // Códigos tomados de Syspharma2/src/features/settings/rolesConfig.js (PERMISSIONS_CONFIG),
-        // que es la fuente de verdad que usa el frontend para administrar permisos por rol.
         private static readonly (string Codigo, string Nombre, string Categoria)[] PermisosCatalogo = new[]
         {
             ("dashboard.view", "Acceso al Dashboard", "Inicio"),
@@ -274,13 +245,6 @@ namespace Syspharma.API.Startup
             ("sales.invoice", "Generar factura", "Ventas"),
             ("sales.export", "Exportar ventas", "Ventas"),
 
-            ("orders.view", "Ver pedidos", "Pedidos"),
-            ("orders.create", "Agregar pedido", "Pedidos"),
-            ("orders.edit", "Editar pedido", "Pedidos"),
-            ("orders.delete", "Eliminar pedido", "Pedidos"),
-            ("orders.status", "Cambiar estado", "Pedidos"),
-            ("orders.export", "Exportar pedidos", "Pedidos"),
-
             ("services.view", "Ver servicios", "Servicios"),
             ("services.create", "Agregar servicio", "Servicios"),
             ("services.edit", "Editar servicio", "Servicios"),
@@ -315,8 +279,6 @@ namespace Syspharma.API.Startup
 
         private static async Task SeedPermisosAsync(SyspharmaContext context, Role roleAdmin)
         {
-            // Inserta solo los códigos del catálogo que todavía no existan — permite
-            // agregar permisos nuevos en despliegues futuros sin tocar los ya creados.
             var codigosExistentes = await context.Permisos.Select(p => p.Codigo).ToListAsync();
             var faltantes = PermisosCatalogo.Where(p => !codigosExistentes.Contains(p.Codigo)).ToList();
             if (faltantes.Count > 0)
@@ -331,9 +293,6 @@ namespace Syspharma.API.Startup
                 await context.SaveChangesAsync();
             }
 
-            // El rol Administrador tiene bypass de permisos en RequirePermissionFilter,
-            // pero se le asignan todos igual para que la pantalla de Configuración > Roles
-            // refleje el estado real (checkboxes marcados) en vez de verse vacía.
             var permisoIdsAsignados = await context.RolesPermisos
                 .Where(rp => rp.RoleId == roleAdmin.Id)
                 .Select(rp => rp.PermisoId)
@@ -358,7 +317,6 @@ namespace Syspharma.API.Startup
         {
             if (await context.Usuarios.AnyAsync()) return;
 
-            // Cambiar esta contraseña inmediatamente después del primer login.
             var email = "admin@syspharma.local";
             var password = "XOnDvEJSfAsb+J7P";
 

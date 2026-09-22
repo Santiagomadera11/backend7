@@ -18,14 +18,11 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Secretos locales (no versionados) sobreescriben appsettings.json
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true);
 
-// 1. DB
 builder.Services.AddDbContext<SyspharmaContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Identity
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(options =>
 {
     options.Password.RequireDigit = false;
@@ -34,7 +31,6 @@ builder.Services.AddIdentity<Usuario, IdentityRole<int>>(options =>
 .AddEntityFrameworkStores<SyspharmaContext>()
 .AddDefaultTokenProviders();
 
-// 3. JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -57,18 +53,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 4. Email
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
-// 5. CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFront", policy =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
-// 6. Controllers
 builder.Services.AddControllers()
     .AddJsonOptions(opts =>
     {
@@ -76,10 +69,8 @@ builder.Services.AddControllers()
         opts.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
-// 7. AutoMapper
 builder.Services.AddAutoMapper(cfg => { }, AppDomain.CurrentDomain.GetAssemblies());
 
-// 8. Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -105,13 +96,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// 9. Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IRolMaestroRepository, RolMaestroRepository>();
 builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<IMarcaRepository, MarcaRepository>();
 builder.Services.AddScoped<IPresentacionRepository, PresentacionRepository>();
-builder.Services.AddScoped<IProductoRepository, ProductoRepository>(); // Ya registrado
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 builder.Services.AddScoped<IProveedorRepository, ProveedorRepository>();
 builder.Services.AddScoped<IMedicoRepository, MedicoRepository>();
 builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
@@ -119,47 +109,39 @@ builder.Services.AddScoped<IDisponibilidadService, DisponibilidadService>();
 builder.Services.AddScoped<IPermisoRepository, PermisoRepository>();
 builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<IVentaRepository, VentaRepository>();
-builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddScoped<IServicioRepository, ServicioRepository>();
 builder.Services.AddScoped<ICitaRepository, CitaRepository>();
 builder.Services.AddScoped<ITurnoRepository, TurnoRepository>();
 builder.Services.AddScoped<IGastoRepository, GastoRepository>();
 builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
 builder.Services.AddScoped<IDevolucionRepository, DevolucionRepository>();
-builder.Services.AddScoped<ICarritoRepository, CarritoRepository>();
-builder.Services.AddScoped<INotificacionRepository, NotificacionRepository>();
 
-// 10. Servicios
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IRolMaestroService, RolMaestroService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IMarcaService, MarcaService>();
 builder.Services.AddScoped<IPresentacionService, PresentacionService>();
-builder.Services.AddScoped<IProductoService, ProductoService>(); // Ya registrado
+builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<IProveedorService, ProveedorService>();
 builder.Services.AddScoped<IMedicoService, MedicoService>();
 builder.Services.AddScoped<IPermisoService, PermisoService>();
 builder.Services.AddScoped<ICompraService, CompraService>();
 builder.Services.AddScoped<IVentaService, VentaService>();
-builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<IServicioService, ServicioService>();
 builder.Services.AddScoped<ICitaService, CitaService>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<IGastoService, GastoService>();
 builder.Services.AddScoped<IDisponibilidadService, DisponibilidadService>();
 builder.Services.AddScoped<IDevolucionService, DevolucionService>();
-builder.Services.AddScoped<ICarritoService, CarritoService>();
-builder.Services.AddScoped<INotificacionService, NotificacionService>();
 
-// 11. Otros
 builder.Services.AddMemoryCache();
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IImageUploadService, CloudinaryImageUploadService>();
 
 var app = builder.Build();
 
 app.UseRouting();
 
-// Forzar ruta correcta de wwwroot para servir archivos estáticos
 var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 app.UseStaticFiles(new StaticFileOptions
 {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -36,6 +37,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("purchase.create")]
         public async Task<IActionResult> Crear([FromBody] CompraCreateDto dto)
         {
             try
@@ -47,6 +49,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("purchase.edit")]
         public async Task<IActionResult> Actualizar([FromBody] CompraUpdateDto dto)
         {
             try
@@ -58,6 +61,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("purchase.status")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] int estadoId)
         {
             try
@@ -69,6 +73,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("purchase.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             try

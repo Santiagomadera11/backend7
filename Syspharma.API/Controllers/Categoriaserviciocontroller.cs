@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -16,7 +17,6 @@ namespace Syspharma.API.Controllers
         public CategoriaServicioController(SyspharmaContext context) => _context = context;
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerTodos()
         {
             var categorias = await _context.CategoriaServicios
@@ -36,6 +36,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("config.service_categories.create")]
         public async Task<IActionResult> Crear([FromBody] CategoriaServicioDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Nombre))
@@ -57,6 +58,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("config.service_categories.edit")]
         public async Task<IActionResult> Actualizar([FromBody] CategoriaServicioUpdateDto dto)
         {
             var categoria = await _context.CategoriaServicios.FindAsync(dto.Id);
@@ -72,6 +74,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("config.service_categories.edit")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             var categoria = await _context.CategoriaServicios.FindAsync(id);
@@ -82,6 +85,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("config.service_categories.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             var categoria = await _context.CategoriaServicios.FindAsync(id);

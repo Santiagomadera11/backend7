@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
+using Syspharma.API.Filters;
 
 namespace Syspharma.API.Controllers
 {
@@ -16,7 +17,6 @@ namespace Syspharma.API.Controllers
         public MetodoPagoController(SyspharmaContext context) => _context = context;
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> ObtenerTodos()
         {
             var metodos = await _context.MetodosPagos
@@ -36,6 +36,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPost]
+        [RequirePermission("config.payment_methods.create")]
         public async Task<IActionResult> Crear([FromBody] MetodoPagoDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Nombre))
@@ -56,6 +57,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPut]
+        [RequirePermission("config.payment_methods.edit")]
         public async Task<IActionResult> Actualizar([FromBody] MetodoPagoUpdateDto dto)
         {
             var metodo = await _context.MetodosPagos.FindAsync(dto.Id);
@@ -70,6 +72,7 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpPatch("{id}/estado")]
+        [RequirePermission("config.payment_methods.edit")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] bool estado)
         {
             var metodo = await _context.MetodosPagos.FindAsync(id);
@@ -80,13 +83,13 @@ namespace Syspharma.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [RequirePermission("config.payment_methods.delete")]
         public async Task<IActionResult> Eliminar(int id)
         {
             var metodo = await _context.MetodosPagos.FindAsync(id);
             if (metodo == null) return NotFound(new { message = "Método de pago no encontrado" });
 
-            var enUso = await _context.Ventas.AnyAsync(v => v.MetodoPagoId == id) ||
-                        await _context.Pedidos.AnyAsync(p => p.MetodoPagoId == id);
+            var enUso = await _context.Ventas.AnyAsync(v => v.MetodoPagoId == id);
             if (enUso)
                 return BadRequest(new { message = "No se puede eliminar porque está en uso" });
 

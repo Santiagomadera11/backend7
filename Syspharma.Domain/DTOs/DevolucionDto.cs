@@ -34,6 +34,7 @@ namespace Syspharma.Domain.DTOs
         public int CantidadDevuelta { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal SubtotalDevuelto { get; set; }
+        public bool Reingresa { get; set; }
     }
 
     public class DevolucionCreateDto
@@ -69,13 +70,15 @@ namespace Syspharma.Domain.DTOs
         [Required(ErrorMessage = "La cantidad a devolver es obligatoria.")]
         [Range(1, int.MaxValue, ErrorMessage = "La cantidad a devolver debe ser mayor o igual a 1.")]
         public int CantidadDevuelta { get; set; }
+
+        public bool Reingresa { get; set; } = true;
     }
 
     public class DevolucionGestionarDto
     {
         [Required(ErrorMessage = "El nuevo estado es obligatorio.")]
         [Range(2, 3, ErrorMessage = "El nuevo estado debe ser Aprobada (2) o Rechazada (3).")]
-        public int NuevoEstado { get; set; }      // 2 = Aprobada | 3 = Rechazada
+        public int NuevoEstado { get; set; }
 
         [Required(ErrorMessage = "El ID del usuario gestor es obligatorio.")]
         [Range(1, int.MaxValue, ErrorMessage = "El ID de usuario gestor no es válido.")]
@@ -87,5 +90,22 @@ namespace Syspharma.Domain.DTOs
         public int Id { get; set; }
         public string Nombre { get; set; } = "";
         public bool Activo { get; set; }
+    }
+
+    public class MermaDto
+    {
+        public int DetalleDevolucionId { get; set; }
+        public int DevolucionId { get; set; }
+        public int VentaId { get; set; }
+        public string NumeroVenta { get; set; } = "";
+        public int ProductoId { get; set; }
+        public string ProductoNombre { get; set; } = "";
+        public int CantidadPerdida { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal ValorPerdida { get; set; }
+        public string Motivo { get; set; } = "";
+        public string? Observaciones { get; set; }
+        public DateTime FechaGestion { get; set; }
+        public string UsuarioGestionNombre { get; set; } = "";
     }
 }
