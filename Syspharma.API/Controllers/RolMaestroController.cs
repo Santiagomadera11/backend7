@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Syspharma.Business.Services;
 using Syspharma.Domain.DTOs;
 using Syspharma.API.Filters;
@@ -67,7 +67,7 @@ namespace Syspharma.API.Controllers
                 if (fullMessage.Contains("the delete statement conflicted with the reference constraint") ||
                     fullMessage.Contains("fk_usuarios_roles") ||
                     fullMessage.Contains("foreign key") ||
-                    (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547))
+                    (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "23503"))
                 {
                     return Conflict(new
                     {
