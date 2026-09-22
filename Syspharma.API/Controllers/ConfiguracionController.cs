@@ -29,9 +29,16 @@ public class ConfiguracionController : ControllerBase
     {
         var config = await _context.Configuraciones
             .FirstOrDefaultAsync(c => c.Clave == clave);
-        if (config == null) return NotFound();
-        config.Valor = valor;
-        config.FechaActualizacion = DateTime.Now;
+        if (config == null)
+        {
+            config = new Configuracion { Clave = clave, Valor = valor, FechaActualizacion = DateTime.Now };
+            _context.Configuraciones.Add(config);
+        }
+        else
+        {
+            config.Valor = valor;
+            config.FechaActualizacion = DateTime.Now;
+        }
         await _context.SaveChangesAsync();
         return Ok(new { config.Clave, config.Valor });
     }
