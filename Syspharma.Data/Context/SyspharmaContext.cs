@@ -63,6 +63,17 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
 
     public virtual DbSet<DetalleDevolucionLote> DetalleDevolucionLotes { get; set; }
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        // La app trabaja con DateTime.Now (hora local sin timezone) en todo el codigo.
+        // Sin esto, Npgsql mapea DateTime por defecto a "timestamp with time zone",
+        // que exige Kind=Utc y rompe cualquier propiedad no mapeada explicitamente.
+        configurationBuilder.Properties<DateTime>().HaveColumnType("timestamp without time zone");
+        configurationBuilder.Properties<DateTime?>().HaveColumnType("timestamp without time zone");
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
