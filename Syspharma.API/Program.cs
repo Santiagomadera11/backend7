@@ -21,7 +21,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true);
 
 builder.Services.AddDbContext<SyspharmaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var renderPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(renderPort))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{renderPort}");
+}
 
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(options =>
 {
@@ -149,7 +155,10 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
-app.UseHttpsRedirection();
+if (string.IsNullOrEmpty(renderPort))
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("AllowFront");
 
 app.UseAuthentication();
@@ -165,6 +174,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<SyspharmaContext>();
+    await context.Database.MigrateAsync();
+}
 
 await Syspharma.API.Startup.DataSeeder.SeedAsync(app.Services);
 

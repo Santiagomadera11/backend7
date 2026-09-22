@@ -118,7 +118,7 @@ namespace Syspharma.API.Controllers
                 var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
                 var limiteDateOnly = hoyDateOnly.AddDays(diasLimite);
 
-                var items = await _context.Lotes
+                var lotesRaw = await _context.Lotes
                     .Where(l => l.Producto.Estado &&
                                 l.Cantidad > 0 &&
                                 l.FechaVencimiento <= limiteDateOnly)
@@ -129,11 +129,21 @@ namespace Syspharma.API.Controllers
                         ProductoNombre = l.Producto.Nombre,
                         l.NumeroLote,
                         FechaVencimiento = l.FechaVencimiento,
-                        CantidadDisponible = l.Cantidad,
-                        DiasRestantes = EF.Functions.DateDiffDay(hoyDateOnly, l.FechaVencimiento)
+                        CantidadDisponible = l.Cantidad
                     })
                     .OrderBy(l => l.FechaVencimiento)
                     .ToListAsync();
+
+                var items = lotesRaw.Select(l => new
+                {
+                    l.LoteId,
+                    l.ProductoId,
+                    l.ProductoNombre,
+                    l.NumeroLote,
+                    l.FechaVencimiento,
+                    l.CantidadDisponible,
+                    DiasRestantes = l.FechaVencimiento.DayNumber - hoyDateOnly.DayNumber
+                });
 
                 return Ok(new
                 {
