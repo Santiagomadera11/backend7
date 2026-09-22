@@ -38,7 +38,6 @@ namespace Syspharma.API.Controllers
             }
             catch (Exception ex)
             {
-                // Devolver el INNER EXCEPTION (el error real de SQL)
                 var errorReal = ex.InnerException?.Message ?? ex.Message;
                 return BadRequest(new { message = errorReal });
             }

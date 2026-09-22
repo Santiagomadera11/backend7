@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Syspharma.Domain.DTOs
 {
-    // DTO para los selectores de estado
     public class CitaEstadoDto
     {
         public int Id { get; set; }

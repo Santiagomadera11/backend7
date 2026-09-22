@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -76,18 +76,6 @@ namespace Syspharma.API.Controllers
             });
         }
 
-        // Autoedición de perfil: solo el propio usuario autenticado puede editar sus datos
-        // (editar A OTROS usuarios es responsabilidad de UsuarioController, que exige el
-        // permiso users.edit). Antes esta ruta no tenía [Authorize] ni verificaba el
-        // dueño del token, así que cualquiera (sin sesión) podía reescribir el perfil de
-        // cualquier usuario por ID.
-        //
-        // Usa su propio DTO (UpdateMiPerfilDto) en vez del UsuarioUpdateDto que usa el
-        // admin: ese último exige RolId/Estado como obligatorios (los necesita el admin
-        // para editar a otros), pero el front de "Mi Perfil" nunca los manda. Como
-        // AuthController tiene [ApiController], el ModelState inválido corta la petición
-        // con un 400 automático ANTES de que el código del método llegue a ejecutarse, así
-        // que un ModelState.Remove("RolId") acá adentro nunca alcanza a correr.
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateMiPerfilDto dto)
@@ -161,7 +149,6 @@ namespace Syspharma.API.Controllers
             var code = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             _cache.Set($"recovery_{dto.Email}", code, TimeSpan.FromMinutes(15));
 
-            // ── Template mejorado de recuperación ──────────────────────────
             var htmlRecuperacion = EmailTemplates.RecuperacionContrasena(userEntity.Nombre ?? "Usuario", code);
 
             try
@@ -179,9 +166,6 @@ namespace Syspharma.API.Controllers
         [HttpPost("verify-code")]
         public IActionResult VerifyCode([FromBody] VerifyCodeDto dto)
         {
-            // Solo confirma para la UI que el código es correcto — a propósito NO lo
-            // borra del caché acá. El único paso que puede consumirlo es ResetPassword,
-            // que es el que de verdad cambia la contraseña.
             if (!_cache.TryGetValue($"recovery_{dto.Email}", out string? codeGuardado))
                 return BadRequest(new { message = "Código expirado o no encontrado." });
 
@@ -197,10 +181,6 @@ namespace Syspharma.API.Controllers
             if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.NewPassword))
                 return BadRequest(new { message = "Email y nueva contraseña son requeridos." });
 
-            // Antes este endpoint reseteaba la contraseña con solo el email, sin pedir
-            // el código de verificación — cualquiera podía tomar cualquier cuenta con
-            // solo conocer su correo. Ahora exige el mismo código enviado por mail y lo
-            // valida acá, que es el único lugar donde efectivamente se consume.
             if (string.IsNullOrWhiteSpace(dto.Code))
                 return BadRequest(new { message = "El código de verificación es requerido." });
 
@@ -258,7 +238,6 @@ namespace Syspharma.API.Controllers
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
     }
-
 
     public class UpdateMiPerfilDto
     {

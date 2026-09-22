@@ -28,7 +28,6 @@ namespace Syspharma.Domain.DTOs
         public DateTime? FechaGasto { get; set; }
         public DateTime? FechaCreacion { get; set; }
 
-        // Campos específicos para el frontend (ExpensesModal)
         public string? Hora { get; set; }
         public DateTime? Fecha { get; set; }
         public string? Observaciones { get; set; }
@@ -110,7 +109,6 @@ namespace Syspharma.Domain.DTOs
         public DateTime? FechaGasto { get; set; }
     }
 
-    // NUEVO: DTO para KPIs
     public class GastoKpiDto
     {
         public decimal TotalGastosDia { get; set; }

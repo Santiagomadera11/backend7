@@ -39,15 +39,13 @@ namespace Syspharma.Data.Repositories
             EstadoNombre = c.Estado?.Nombre ?? "Pendiente",
             UsuarioId = c.UsuarioId,
             UsuarioNombre = c.Usuario?.Nombre,
-            VentaId = c.VentaId,        // ← AGREGADO
+            VentaId = c.VentaId,
             Fecha = c.Fecha == default ? DateTime.Now.ToString("yyyy-MM-dd") : c.Fecha.ToString("yyyy-MM-dd"),
             Hora = c.Hora == default ? "00:00" : c.Hora.ToString(@"HH\:mm"),
             Notas = c.Notas,
             FechaCreacion = c.FechaCreacion
         };
 
-        // "desde" filtra en SQL (para el feed de notificaciones, que solo necesita
-        // las citas creadas después del último visto en vez de traer la tabla entera).
         public async Task<List<CitaDto>> ObtenerTodos(DateTime? desde = null)
         {
             var query = _context.Citas
@@ -92,17 +90,12 @@ namespace Syspharma.Data.Repositories
             if (fechaHoraCita <= horaActualColombia)
                 throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
 
-            // El selector de horarios (ObtenerSlots) ya oculta las horas ocupadas, pero eso es
-            // solo la UI — sin este chequeo acá, dos solicitudes casi simultáneas (o una llamada
-            // directa a la API) podían agendar dos pacientes con el mismo médico a la misma hora.
-            // "Cancelada"/"No Asistió" no cuentan porque liberan el horario.
             var yaOcupado = await _context.Citas.AnyAsync(c =>
                 c.MedicoId == dto.MedicoId && c.Fecha == fechaCita && c.Hora == horaCita &&
                 c.EstadoId != 5 && c.EstadoId != 6);
             if (yaOcupado)
                 throw new Exception("Ya existe una cita agendada con este médico en esa fecha y hora.");
 
-            // --- NUEVO: Buscamos el servicio asociado para guardar su precio y nombre histórico ---
             var servicio = await _context.Servicios.FindAsync(dto.ServicioId);
             decimal? precioServicio = servicio?.Precio;
             string? nombreServicio = servicio?.Nombre;
@@ -116,7 +109,6 @@ namespace Syspharma.Data.Repositories
                 PacienteEmail = dto.PacienteEmail,
                 ServicioId = dto.ServicioId,
 
-                // Guardamos el precio y el nombre histórico del servicio en la cita
                 ServicioNombre = nombreServicio,
                 Precio = precioServicio,
 
@@ -139,10 +131,6 @@ namespace Syspharma.Data.Repositories
             var fechaCita = DateOnly.Parse(dto.Fecha);
             var horaCita = TimeOnly.Parse(dto.Hora);
 
-            // Solo se valida "no puede ser pasado" si realmente se está reprogramando
-            // (fecha/hora distintas a las que ya tenía). Antes se exigía siempre, así que
-            // era imposible editar cualquier otro campo (teléfono, notas, servicio) de una
-            // cita cuya fecha ya pasó naturalmente.
             if (fechaCita != cita.Fecha || horaCita != cita.Hora)
             {
                 var fechaHoraCita = fechaCita.ToDateTime(horaCita);
@@ -162,8 +150,6 @@ namespace Syspharma.Data.Repositories
                 if (fechaHoraCita <= horaActualColombia)
                     throw new Exception("No se puede agendar una cita en una hora o día ya pasado.");
 
-                // Igual que en Crear: bloquear reprogramar hacia una hora que ya tiene otra
-                // cita agendada con ese médico.
                 var yaOcupado = await _context.Citas.AnyAsync(c =>
                     c.Id != dto.Id && c.MedicoId == dto.MedicoId && c.Fecha == fechaCita && c.Hora == horaCita &&
                     c.EstadoId != 5 && c.EstadoId != 6);
@@ -171,8 +157,6 @@ namespace Syspharma.Data.Repositories
                     throw new Exception("Ya existe una cita agendada con este médico en esa fecha y hora.");
             }
 
-            // Si cambia el servicio, se vuelve a tomar su precio/nombre histórico (igual
-            // que en Crear); si no cambia, se preservan los que ya tenía.
             if (dto.ServicioId.HasValue && dto.ServicioId != cita.ServicioId)
             {
                 var servicio = await _context.Servicios.FindAsync(dto.ServicioId.Value);
@@ -199,9 +183,6 @@ namespace Syspharma.Data.Repositories
             var c = await _context.Citas.FindAsync(id);
             if (c == null) return false;
 
-            // "Pagada" no se puede fijar a mano por acá: solo debe alcanzarse cuando
-            // VentaService.Crear procesa un cobro real (ver el vínculo Cita↔Venta). Si no,
-            // cualquiera podría marcar una cita como pagada sin que exista ninguna venta.
             var estadoDestino = await _context.EstadosCita.FindAsync(estadoId);
             if (estadoDestino != null && estadoDestino.Nombre == "Pagada" && c.VentaId == null)
                 throw new Exception("El estado 'Pagada' no se puede asignar manualmente: se marca automáticamente al cobrar la cita mediante una venta.");

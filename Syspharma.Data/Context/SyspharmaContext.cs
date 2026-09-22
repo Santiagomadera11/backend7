@@ -48,7 +48,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
     public virtual DbSet<VVentaDetalle> VVentaDetalles { get; set; }
     public virtual DbSet<Venta> Ventas { get; set; }
     public virtual DbSet<VentaDetalle> VentaDetalles { get; set; }
-    // Nueva DbSet agregada
     public virtual DbSet<DetalleDevolucion> DetallesDevolucion { get; set; }
     public virtual DbSet<VentaDetalleServicio> VentaDetalleServicios { get; set; }
 
@@ -56,7 +55,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
     public virtual DbSet<Devolucion> Devoluciones { get; set; }
     public virtual DbSet<DetalleDevolucion> DetallesDevoluciones { get; set; }
 
-    // ✅ Nuevo DbSet para configuraciones
     public virtual DbSet<Configuracion> Configuraciones { get; set; }
 
     public virtual DbSet<Lote> Lotes { get; set; }
@@ -292,7 +290,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("nombre");
         });
 
-        // ✅ CONFIGURACIÓN DE GASTO (LIMPIA)
         modelBuilder.Entity<Gasto>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__gastos__3213E83F9BA914EE");
@@ -584,8 +581,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.HasOne(d => d.FormaVenta).WithMany().HasForeignKey(d => d.FormaVentaId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_VentaDetalles_ProductoFormaVenta");
         });
 
-        // Registra, por línea de venta, exactamente cuántas unidades salieron de cada lote
-        // (una venta con FEFO puede repartir una misma línea entre varios lotes).
         modelBuilder.Entity<VentaDetalleLote>(entity =>
         {
             entity.ToTable("venta_detalle_lotes");
@@ -729,8 +724,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
                 .HasConstraintName("FK_Lotes_Compras");
         });
 
-        // --- DEVOLUCIONES ---
-
         modelBuilder.Entity<EstadoDevolucion>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__EstadosDevoluciones");
@@ -808,7 +801,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
                 .HasConstraintName("FK_DetDev_DetalleVenta");
         });
 
-        // ✅ Mapeo de Configuracion
         modelBuilder.Entity<Configuracion>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -866,9 +858,6 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Activo).HasColumnName("activo");
         });
 
-        // Registra, por línea de devolución, exactamente a qué lote(s) se le devolvió
-        // cantidad (una devolución puede repartirse entre los mismos lotes de los que
-        // salió la venta original).
         modelBuilder.Entity<DetalleDevolucionLote>(entity =>
         {
             entity.ToTable("detalle_devolucion_lotes");

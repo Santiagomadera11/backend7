@@ -44,7 +44,6 @@ namespace Syspharma.API.Controllers
         {
             try
             {
-                // El DTO recibido ya contiene opcionalmente las propiedades 'EsMedicamento' y 'Medicamento'
                 var result = await _service.Crear(dto);
                 return Ok(result);
             }
@@ -60,7 +59,6 @@ namespace Syspharma.API.Controllers
         {
             try
             {
-                // Permite actualizar los datos básicos y los detalles de medicamento en una sola llamada
                 var result = await _service.Actualizar(dto);
                 return Ok(result);
             }
@@ -120,10 +118,6 @@ namespace Syspharma.API.Controllers
                 var hoyDateOnly = DateOnly.FromDateTime(DateTime.Today);
                 var limiteDateOnly = hoyDateOnly.AddDays(diasLimite);
 
-                // Se calcula en vivo a partir de los Lotes reales. La columna
-                // Producto.FechaVencimientoProxima nunca se actualiza en ningún flujo de
-                // escritura (crear/actualizar producto, recibir compra, vender), así que
-                // quedaba siempre en null y este endpoint nunca devolvía nada.
                 var items = await _context.Lotes
                     .Where(l => l.Producto.Estado &&
                                 l.Cantidad > 0 &&

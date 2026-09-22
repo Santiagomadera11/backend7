@@ -5,7 +5,7 @@ public class MedicoHorario
 {
 	public int Id { get; set; }
 	public int MedicoId { get; set; }
-	public byte DiaSemana { get; set; } // 0=Dom..6=Sab
+	public byte DiaSemana { get; set; }
 	public TimeOnly? MananaInicio { get; set; }
 	public TimeOnly? MananaFin { get; set; }
 	public TimeOnly? TardeInicio { get; set; }

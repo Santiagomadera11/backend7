@@ -92,9 +92,6 @@ namespace Syspharma.Data.Repositories
             };
         }
 
-        // Garantiza que exista SIEMPRE una forma "Unidad" con Precio = producto.Precio y
-        // FactorUnidades = 1 (el precio del producto es la fuente de verdad para Unidad,
-        // nunca un valor independiente enviado por el frontend). Valida Blister/Caja.
         private static List<ProductoFormaVentaDto> NormalizarFormasVenta(List<ProductoFormaVentaDto>? formas, decimal precioProducto)
         {
             var normalizadas = new List<ProductoFormaVentaDto>();
@@ -235,7 +232,6 @@ namespace Syspharma.Data.Repositories
             _context.Productos.Add(producto);
             await _context.SaveChangesAsync();
 
-            // --- NUEVO: Guardado de los detalles de medicamento ---
             if (dto.EsMedicamento && dto.Medicamento != null)
             {
                 var medicamento = new ProductoMedicamento
@@ -258,7 +254,6 @@ namespace Syspharma.Data.Repositories
                 await _context.SaveChangesAsync();
             }
 
-            // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
             var formasNormalizadas = NormalizarFormasVenta(dto.FormasVenta, producto.Precio);
             foreach (var f in formasNormalizadas)
             {
@@ -305,7 +300,6 @@ namespace Syspharma.Data.Repositories
 
             await _context.SaveChangesAsync();
 
-            // --- NUEVO: Gestión de actualización del detalle de medicamento ---
             var medicamentoExistente = await _context.ProductoMedicamentos
                 .FirstOrDefaultAsync(pm => pm.ProductoId == producto.Id);
 
@@ -313,7 +307,6 @@ namespace Syspharma.Data.Repositories
             {
                 if (medicamentoExistente == null)
                 {
-                    // Si antes era producto normal y ahora es medicamento, creamos el detalle
                     var nuevoMedicamento = new ProductoMedicamento
                     {
                         ProductoId = producto.Id,
@@ -333,7 +326,6 @@ namespace Syspharma.Data.Repositories
                 }
                 else
                 {
-                    // Si ya existía, actualizamos sus campos adicionales
                     medicamentoExistente.Composicion = dto.Medicamento.Composicion;
                     medicamentoExistente.Concentracion = dto.Medicamento.Concentracion;
                     medicamentoExistente.ViaAdministracion = dto.Medicamento.ViaAdministracion;
@@ -350,15 +342,10 @@ namespace Syspharma.Data.Repositories
             }
             else if (!dto.EsMedicamento && medicamentoExistente != null)
             {
-                // Si ya no es medicamento, removemos el detalle de la base de datos
                 _context.ProductoMedicamentos.Remove(medicamentoExistente);
                 await _context.SaveChangesAsync();
             }
 
-            // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
-            // Actualiza in-place las que coinciden por Tipo (nunca borra el Id, referenciado
-            // por ventas/pedidos históricos). Las que ya no vienen en el DTO se desactivan
-            // (soft-delete): nunca se hace Remove() de una fila producto_forma_venta.
             var formasNormalizadas = NormalizarFormasVenta(dto.FormasVenta, producto.Precio);
             var formasExistentes = await _context.ProductoFormasVenta
                 .Where(f => f.ProductoId == producto.Id)
@@ -392,7 +379,7 @@ namespace Syspharma.Data.Repositories
             {
                 if (!tiposEnviados.Contains(existente.Tipo))
                 {
-                    existente.Activo = false; // soft-delete: nunca Remove()
+                    existente.Activo = false;
                 }
             }
 

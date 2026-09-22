@@ -54,7 +54,6 @@ namespace Syspharma.API.Controllers
                 return Unauthorized();
             }
 
-            // Permitir si es el mismo usuario logueado
             if (loggedInUserId == id)
             {
                 var selfUsuario = await _service.ObtenerPorId(id);
@@ -62,7 +61,6 @@ namespace Syspharma.API.Controllers
                 return Ok(selfUsuario);
             }
 
-            // Si es otro usuario, verificar si tiene el permiso "users.view"
             var usuarioLogueado = await _context.Usuarios
                 .Include(u => u.Role)
                     .ThenInclude(r => r.RolesPermisos)

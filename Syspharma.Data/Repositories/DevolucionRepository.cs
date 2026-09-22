@@ -77,23 +77,16 @@ namespace Syspharma.Data.Repositories
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Una venta anulada ya devolvió el 100% de su stock/lotes en VentaService.Anular.
-                // Si se permitiera además una devolución sobre ella, al aprobarla se acreditaría
-                // ese stock una segunda vez.
                 var ventaOrigen = await _context.Ventas.FindAsync(dto.VentaId)
                     ?? throw new Exception("La venta no existe.");
                 if (ventaOrigen.EstadoId == 3)
                     throw new Exception("No se puede registrar una devolución sobre una venta anulada: su stock ya fue restaurado por completo al anularla.");
 
-                // Obtener precios de los detalles de venta
                 var detalleVentaIds = dto.Detalles.Select(d => d.DetalleVentaId).ToList();
                 var detallesVenta = await _context.VentaDetalles
                     .Where(d => detalleVentaIds.Contains(d.Id))
                     .ToListAsync();
 
-                // Cuánto se ha devuelto ya de cada línea (contando Pendientes y Aprobadas,
-                // pero no Rechazadas), para no permitir devolver más de lo que la venta
-                // realmente entregó ni duplicar una devolución ya registrada.
                 var yaDevueltoPorLinea = await _context.DetallesDevoluciones
                     .Where(dd => detalleVentaIds.Contains(dd.DetalleVentaId) && dd.Devolucion.EstadoId != 3)
                     .GroupBy(dd => dd.DetalleVentaId)
@@ -101,10 +94,6 @@ namespace Syspharma.Data.Repositories
                     .ToDictionaryAsync(g => g.DetalleVentaId, g => g.Cantidad);
 
                 var detalles = new List<DetalleDevolucion>();
-                // Acumula lo que esta MISMA solicitud ya reservó por línea, para que dos
-                // entradas con el mismo DetalleVentaId en un solo request no se validen
-                // cada una por separado contra el mismo disponible (lo que permitiría que
-                // la suma de ambas exceda lo realmente vendido).
                 var acumuladoEnEstaSolicitud = new Dictionary<int, int>();
                 foreach (var d in dto.Detalles)
                 {
@@ -140,7 +129,7 @@ namespace Syspharma.Data.Repositories
                 {
                     VentaId = dto.VentaId,
                     UsuarioId = dto.UsuarioId,
-                    EstadoId = 1, // pendiente
+                    EstadoId = 1,
                     Motivo = dto.Motivo,
                     Observaciones = dto.Observaciones,
                     TotalDevolucion = total,
@@ -149,12 +138,6 @@ namespace Syspharma.Data.Repositories
                 };
 
                 _context.Devoluciones.Add(devolucion);
-
-                // Ni el stock ni el estado de la venta cambian acá: la devolución nace
-                // "Pendiente" (EstadoId=1) y solo debe impactar el inventario y marcar la
-                // venta como "Devolución" cuando un supervisor la aprueba (ver Gestionar).
-                // Así se evita que cualquiera infle el stock o bloquee la anulación de una
-                // venta con solo registrar una devolución, sin que nadie la revise.
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -180,9 +163,6 @@ namespace Syspharma.Data.Repositories
                 if (devolucion.EstadoId != 1)
                     throw new Exception("Esta devolución ya fue gestionada y no puede volver a procesarse.");
 
-                // Si en el tiempo que la devolución estuvo pendiente la venta fue anulada,
-                // VentaService.Anular ya restauró el 100% de su stock y lotes. Aprobar esta
-                // devolución ahora volvería a sumar ese mismo stock una segunda vez.
                 var venta = await _context.Ventas.FindAsync(devolucion.VentaId);
                 if (dto.NuevoEstado == 2 && venta != null && venta.EstadoId == 3)
                     throw new Exception("No se puede aprobar esta devolución: la venta ya fue anulada y su stock se restauró por completo en ese momento. Rechaza la devolución en su lugar.");
@@ -191,17 +171,8 @@ namespace Syspharma.Data.Repositories
                 devolucion.UsuarioGestionId = dto.UsuarioGestionId;
                 devolucion.FechaGestion = DateTime.Now;
 
-                // El stock recién se reingresa acá, al aprobar (2). Si se rechaza (3),
-                // el producto nunca vuelve al inventario, y la venta no cambia de estado.
                 if (dto.NuevoEstado == 2)
                 {
-                    // El reembolso sale de la caja ACTUALMENTE ABIERTA de quien aprueba la
-                    // devolución, no de la caja de la venta original: esa puede haberse
-                    // cerrado hace mucho (su cuadre ya quedó registrado, igual que en
-                    // Anular) y la plata físicamente sale del cajón que está abierto ahora.
-                    // Todas las líneas de una devolución son de productos (nunca de
-                    // servicios), así que TotalDevolucion siempre es "solo productos" —
-                    // mismo criterio que ya usa Turno.TotalVentas al crear una venta.
                     var turnoAprobador = await _context.Turnos
                         .FirstOrDefaultAsync(t => t.UsuarioId == dto.UsuarioGestionId && t.Estado == "activo");
                     if (turnoAprobador != null)
@@ -209,7 +180,6 @@ namespace Syspharma.Data.Repositories
 
                     foreach (var det in devolucion.Detalles)
                     {
-                        // Dañado/vencido: se pierde, no reingresa al stock vendible ni a ningún lote.
                         if (!det.Reingresa) continue;
 
                         var producto = await _context.Productos.FindAsync(det.ProductoId);
@@ -219,9 +189,6 @@ namespace Syspharma.Data.Repositories
                             producto.UltimaActualizacion = DateTime.Now;
                         }
 
-                        // Devolver la cantidad exacta a el/los mismos lotes de donde salió en
-                        // la venta original (VentaDetalleLote), respetando lo que cada lote
-                        // ya recibió por devoluciones aprobadas anteriores de esa misma línea.
                         var ventaDetalle = await _context.VentaDetalles
                             .Include(vd => vd.Lotes)
                             .FirstOrDefaultAsync(vd => vd.Id == det.DetalleVentaId);
@@ -251,9 +218,6 @@ namespace Syspharma.Data.Repositories
                         }
                     }
 
-                    // Recién ahora, al aprobar, la venta pasa a estado "Devolución". El caso
-                    // "ya anulada" ya se descartó arriba con una excepción, así que acá
-                    // siempre es seguro marcarla.
                     if (venta != null) venta.EstadoId = 2;
                 }
 
@@ -276,9 +240,6 @@ namespace Syspharma.Data.Repositories
 
         public async Task<List<MermaDto>> ObtenerMermas(DateTime? desde, DateTime? hasta)
         {
-            // Solo cuentan como merma real las líneas de devoluciones ya APROBADAS (2)
-            // marcadas como "no reingresa" (dañado/vencido). Una pendiente o rechazada
-            // todavía no representa una pérdida confirmada.
             var query = _context.DetallesDevoluciones
                 .Include(dd => dd.Producto)
                 .Include(dd => dd.Devolucion).ThenInclude(d => d.Venta)

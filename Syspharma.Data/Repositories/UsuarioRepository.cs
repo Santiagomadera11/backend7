@@ -11,9 +11,9 @@ namespace Syspharma.Data.Repositories
         Task<UsuarioDto?> ObtenerPorId(int id);
         Task<UsuarioDto> Crear(UsuarioCreateDto dto);
         Task<UsuarioDto> Actualizar(UsuarioUpdateDto dto);
-        Task<UsuarioDto> CambiarEstado(int id, bool estado); // <-- añadido
+        Task<UsuarioDto> CambiarEstado(int id, bool estado);
         Task<bool> Eliminar(int id);
-        Task<UsuarioDto> ActualizarAvatar(int id, string avatar); // <-- nuevo
+        Task<UsuarioDto> ActualizarAvatar(int id, string avatar);
     }
 
     public class UsuarioRepository : IUsuarioRepository
@@ -43,7 +43,6 @@ namespace Syspharma.Data.Repositories
 
         public async Task<List<UsuarioDto>> ObtenerTodos()
         {
-            // ✅ CAMBIO 1: quitar el filtro por Estado para devolver activos e inactivos
             var usuarios = await _context.Usuarios
                 .Include(u => u.Role)
                 .Include(u => u.TipoDocumento)
@@ -109,10 +108,6 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(u => u.Id == dto.Id);
             if (usuario == null) throw new Exception("Usuario no encontrado");
 
-            // Misma regla que CambiarEstado, pero esa protección vivía solo ahí: el
-            // formulario de edición también tiene un switch de Activo/Inactivo en el mismo
-            // modal donde se cambia el rol, así que este camino podía desactivar a un
-            // Administrador sin pasar por esa validación.
             var esAdministrador = usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false;
             if (!dto.Estado && esAdministrador)
                 throw new Exception("No se puede desactivar a un usuario con rol Administrador.");
@@ -125,7 +120,7 @@ namespace Syspharma.Data.Repositories
             usuario.Direccion = dto.Direccion;
             usuario.RoleId = dto.RolId;
             usuario.Estado = dto.Estado;
-            usuario.Avatar = dto.Avatar ?? usuario.Avatar; // ← línea añadida
+            usuario.Avatar = dto.Avatar ?? usuario.Avatar;
 
             await _context.SaveChangesAsync();
             return MapDto(usuario);
@@ -156,12 +151,9 @@ namespace Syspharma.Data.Repositories
             if (usuario == null)
                 throw new Exception("Usuario no encontrado");
 
-            // Misma regla que CambiarEstado/Actualizar: no tocar a un Administrador por
-            // esta vía. Borrarlo físicamente es aún más definitivo que desactivarlo.
             if (usuario.Role?.Nombre?.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ?? false)
                 throw new Exception("No se puede eliminar a un usuario con rol Administrador. Desactívalo primero si ya no debe tener acceso, o cámbiale el rol.");
 
-            // ✅ CAMBIO 2: borrado físico en la base de datos
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
             return true;

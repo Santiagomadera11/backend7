@@ -21,7 +21,6 @@ namespace Syspharma.API.Controllers
             _service = service;
         }
 
-        // GET /api/Marca
         [HttpGet]
         public async Task<IActionResult> ObtenerTodos([FromQuery] string? estado = null)
         {
