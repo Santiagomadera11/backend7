@@ -87,7 +87,6 @@ namespace Syspharma.Data.Repositories
             if (dto.Detalles == null || !dto.Detalles.Any())
                 throw new Exception("La compra debe contener al menos un producto.");
 
-            // Validaciones de medicamentos y valores numéricos
             foreach (var det in dto.Detalles)
             {
                 if (det.Cantidad <= 0)
@@ -142,9 +141,6 @@ namespace Syspharma.Data.Repositories
             _context.Compras.Add(compra);
             await _context.SaveChangesAsync();
 
-            // El número definitivo se basa en el Id ya asignado por la BD, así queda
-            // corto y legible (COM-00042) en vez del formato anterior con fecha+random
-            // (COM-20260917-7757), que era mucho más largo y no aportaba nada extra.
             compra.NumeroCompra = $"COM-{compra.Id:D5}";
             await _context.SaveChangesAsync();
 
@@ -158,13 +154,6 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(c => c.Id == dto.Id)
                 ?? throw new Exception("Compra no encontrada");
 
-            // Esta actualización reemplaza los CompraDetalles por completo y asigna
-            // EstadoId directo, sin pasar por la lógica de CambiarEstado que crea/revierte
-            // Lotes y Stock. Si la compra ya está "Recibida", sus Lotes ya existen con los
-            // valores ORIGINALES (cantidad, costo, vencimiento) — editar los detalles acá
-            // los dejaría desincronizados para siempre (el registro de la compra diría una
-            // cosa, el inventario real otra). Y si se intentara marcar "Recibida" desde acá,
-            // no se generaría ningún lote ni stock.
             var estadoRecibida = await _context.EstadosCompras.FirstOrDefaultAsync(e => e.Nombre.ToLower() == "recibida");
             if (estadoRecibida != null)
             {
@@ -174,7 +163,6 @@ namespace Syspharma.Data.Repositories
                     throw new Exception("Para marcar una compra como recibida usa el botón de cambiar estado, no la edición: solo ese flujo genera los lotes y el stock correspondiente.");
             }
 
-            // Validaciones de medicamentos
             foreach (var det in dto.Detalles)
             {
                 var prod = await _context.Productos
@@ -198,7 +186,6 @@ namespace Syspharma.Data.Repositories
             compra.Observaciones = dto.Observaciones;
             compra.FechaEntrega = dto.FechaEntrega;
 
-            // Reemplazar detalles
             _context.CompraDetalles.RemoveRange(compra.CompraDetalles);
 
             var subtotal = dto.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario);
@@ -239,10 +226,6 @@ namespace Syspharma.Data.Repositories
 
             if (eraRecibida && !seraRecibida)
             {
-                // Se está sacando la compra de "Recibida": hay que revertir el stock y
-                // eliminar los lotes que se crearon al recibirla. Si ya se vendió alguna
-                // unidad de esos lotes, revertir dejaría el stock mal calculado (o negativo),
-                // así que se bloquea el cambio en ese caso.
                 var lotes = await _context.Lotes.Where(l => l.CompraId == id).ToListAsync();
                 if (lotes.Any())
                 {
@@ -264,7 +247,6 @@ namespace Syspharma.Data.Repositories
 
             if (seraRecibida && !eraRecibida)
             {
-                // Crear lotes si no han sido creados previamente
                 if (!await _context.Lotes.AnyAsync(l => l.CompraId == id))
                 {
                     foreach (var det in c.CompraDetalles)
@@ -281,7 +263,6 @@ namespace Syspharma.Data.Repositories
                         };
                         _context.Lotes.Add(lote);
 
-                        // Incrementar el stock global del producto
                         var prod = await _context.Productos.FindAsync(det.ProductoId);
                         if (prod != null)
                         {
@@ -309,10 +290,6 @@ namespace Syspharma.Data.Repositories
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (compra == null) return false;
 
-            // Si la compra ya generó Lotes reales (fue "Recibida"), borrarla no destruye el
-            // stock (la FK a Compra es SetNull, los Lotes sobreviven), pero sí borra para
-            // siempre el rastro de qué compra los originó. Para mantener trazabilidad, se
-            // exige revertir el estado primero (lo que borra esos lotes ordenadamente).
             var tieneLotes = await _context.Lotes.AnyAsync(l => l.CompraId == id);
             if (tieneLotes)
                 throw new Exception("No se puede eliminar una compra que ya generó lotes de inventario. Cambia su estado fuera de 'Recibida' primero (revierte el stock/lotes) y luego elimínala.");

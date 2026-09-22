@@ -12,7 +12,7 @@ namespace Syspharma.Data.Repositories
     public interface IPresentacionRepository
     {
         Task<List<PresentacionDto>> ObtenerTodos();
-        Task<List<PresentacionDto>> ObtenerTodosConInactivos(); // para la página de gestión de presentaciones
+        Task<List<PresentacionDto>> ObtenerTodosConInactivos();
         Task<PresentacionDto?> ObtenerPorId(int id);
         Task<PresentacionDto> Crear(PresentacionCreateDto dto);
         Task<PresentacionDto> Actualizar(PresentacionUpdateDto dto);
@@ -34,7 +34,6 @@ namespace Syspharma.Data.Repositories
             FechaCreacion = p.FechaCreacion
         };
 
-        // Solo activas — para dropdowns de productos
         public async Task<List<PresentacionDto>> ObtenerTodos()
         {
             var lista = await _context.Presentaciones
@@ -43,9 +42,6 @@ namespace Syspharma.Data.Repositories
             return lista.Select(ToDto).ToList();
         }
 
-        // Activas + inactivas — para la página de gestión de presentaciones.
-        // El conteo de productos se calcula con un GROUP BY liviano en vez de
-        // traer la tabla de productos completa (con todos sus joins) al cliente.
         public async Task<List<PresentacionDto>> ObtenerTodosConInactivos()
         {
             var lista = await _context.Presentaciones.ToListAsync();

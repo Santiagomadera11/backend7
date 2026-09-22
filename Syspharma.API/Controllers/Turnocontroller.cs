@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Syspharma.Business.Services;
@@ -18,7 +18,6 @@ namespace Syspharma.API.Controllers
             _service = service;
         }
 
-        // Obtener historial de todos los turnos
         [HttpGet]
         public async Task<IActionResult> ObtenerTodos()
         {
@@ -26,7 +25,6 @@ namespace Syspharma.API.Controllers
             return Ok(turnos);
         }
 
-        // Obtener un turno específico por su ID
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerPorId(int id)
         {
@@ -37,8 +35,6 @@ namespace Syspharma.API.Controllers
             return Ok(t);
         }
 
-        // ENDPOINT CRUCIAL: Obtener el turno que está "activo" para un usuario
-        // Este es el que usará el Administrador para recuperar el ID 40 automáticamente
         [HttpGet("activo/{usuarioId}")]
         public async Task<IActionResult> ObtenerTurnoActivo(int usuarioId)
         {
@@ -49,7 +45,6 @@ namespace Syspharma.API.Controllers
             return Ok(t);
         }
 
-        // Abrir una nueva caja (Crear turno)
         [HttpPost("abrir")]
         public async Task<IActionResult> Abrir([FromBody] TurnoAbrirDto dto)
         {
@@ -64,7 +59,6 @@ namespace Syspharma.API.Controllers
             }
         }
 
-        // Cerrar la caja actual
         [HttpPost("cerrar")]
         public async Task<IActionResult> Cerrar([FromBody] TurnoCerrarDto dto)
         {
@@ -79,7 +73,6 @@ namespace Syspharma.API.Controllers
             }
         }
 
-        // Eliminar un turno (Solo si la lógica de negocio lo permite)
         [HttpDelete("{id}")]
         public async Task<IActionResult> Eliminar(int id)
         {

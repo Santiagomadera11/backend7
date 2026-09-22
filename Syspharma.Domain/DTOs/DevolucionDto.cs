@@ -71,8 +71,6 @@ namespace Syspharma.Domain.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "La cantidad a devolver debe ser mayor o igual a 1.")]
         public int CantidadDevuelta { get; set; }
 
-        // Si es false (dañado/vencido), el producto no reingresa al stock vendible al
-        // aprobar la devolución. Default true: se asume vendible salvo que se indique lo contrario.
         public bool Reingresa { get; set; } = true;
     }
 
@@ -80,7 +78,7 @@ namespace Syspharma.Domain.DTOs
     {
         [Required(ErrorMessage = "El nuevo estado es obligatorio.")]
         [Range(2, 3, ErrorMessage = "El nuevo estado debe ser Aprobada (2) o Rechazada (3).")]
-        public int NuevoEstado { get; set; }      // 2 = Aprobada | 3 = Rechazada
+        public int NuevoEstado { get; set; }
 
         [Required(ErrorMessage = "El ID del usuario gestor es obligatorio.")]
         [Range(1, int.MaxValue, ErrorMessage = "El ID de usuario gestor no es válido.")]
@@ -94,8 +92,6 @@ namespace Syspharma.Domain.DTOs
         public bool Activo { get; set; }
     }
 
-    // Una línea de devolución aprobada marcada como "no reingresa" (dañado/vencido):
-    // representa una pérdida real de inventario que no vuelve a ser vendible.
     public class MermaDto
     {
         public int DetalleDevolucionId { get; set; }

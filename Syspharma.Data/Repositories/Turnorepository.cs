@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
 using Syspharma.Domain.DTOs;
@@ -94,10 +94,6 @@ namespace Syspharma.Data.Repositories
             turno.FechaCierre = DateTime.Now;
             turno.MontoFinal = dto.MontoFinal;
 
-            // Se calcula acá, con la fuente de verdad del turno (no con lo que mande el
-            // cliente): antes el frontend calculaba la diferencia pero nunca la enviaba, y
-            // el DTO ni siquiera tenía el campo — el historial de cuadre de caja siempre
-            // mostraba null/0 para "Diferencia".
             var saldoEsperado = turno.MontoBase + turno.TotalVentas - turno.TotalGastos;
             turno.Diferencia = dto.MontoFinal - saldoEsperado;
 

@@ -8,10 +8,6 @@ namespace Syspharma.API.Services
         Task<string> SubirImagen(IFormFile archivo, string carpeta);
     }
 
-    // Sube imágenes a Cloudinary en vez de al disco local: el disco de un servicio web
-    // típico (Render, etc.) es efímero y se borra en cada redeploy/reinicio, así que
-    // cualquier foto guardada ahí desaparece tarde o temprano. Cloudinary la sirve desde
-    // su propio CDN, independiente del ciclo de vida del backend.
     public class CloudinaryImageUploadService : IImageUploadService
     {
         private readonly Cloudinary _cloudinary;

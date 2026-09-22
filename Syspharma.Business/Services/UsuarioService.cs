@@ -1,11 +1,10 @@
-﻿using Syspharma.Data.Repositories;
+using Syspharma.Data.Repositories;
 using Syspharma.Domain.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Syspharma.Business.Services
 {
-    // INTERFAZ INCLUIDA PARA QUE EL PROGRAM.CS LA ENCUENTRE
     public interface IUsuarioService
     {
         Task<List<UsuarioDto>> ObtenerTodos();

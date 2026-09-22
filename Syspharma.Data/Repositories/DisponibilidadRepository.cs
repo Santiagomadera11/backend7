@@ -125,9 +125,6 @@ namespace Syspharma.Data.Repositories
 
             var slots = new List<string>();
 
-            // "HH" (24 horas), no "hh" (12 horas): TimeOnly.ToString("hh") descarta AM/PM y
-            // convierte, p.ej., las 14:00 en "02:00" — corrompiendo todos los horarios de la
-            // tarde, tanto en los slots generados como (más abajo) en las horas ya ocupadas.
             var mananaInicioStr = horario.MananaInicio.HasValue ? horario.MananaInicio.Value.ToString(@"HH\:mm") : "";
             var mananaFinStr = horario.MananaFin.HasValue ? horario.MananaFin.Value.ToString(@"HH\:mm") : "";
             var tardeInicioStr = horario.TardeInicio.HasValue ? horario.TardeInicio.Value.ToString(@"HH\:mm") : "";
@@ -136,10 +133,6 @@ namespace Syspharma.Data.Repositories
             slots.AddRange(GenerarSlots(mananaInicioStr, mananaFinStr));
             slots.AddRange(GenerarSlots(tardeInicioStr, tardeFinStr));
 
-            // No se excluyen horas con citas ya agendadas: a pedido del negocio, un mismo
-            // horario puede tener varias citas simultáneas con el mismo médico (por ejemplo,
-            // consultas rápidas agendadas una detrás de otra a la misma hora). No hay límite
-            // de citas por franja horaria.
             return slots;
         }
 

@@ -31,6 +31,5 @@ public partial class ProductoMedicamento
 
     public bool? Fotosensible { get; set; }
 
-    // --- NUEVA RELACIÓN INVERSA ---
     public virtual Producto Producto { get; set; } = null!;
 }

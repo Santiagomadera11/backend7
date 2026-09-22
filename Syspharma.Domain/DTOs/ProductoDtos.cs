@@ -27,11 +27,9 @@ namespace Syspharma.Domain.DTOs
         public DateTime? UltimaActualizacion { get; set; }
         public DateOnly? FechaVencimientoProxima { get; set; }
 
-        // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public ProductoMedicamentoDto? Medicamento { get; set; }
         public List<LoteDto> Lotes { get; set; } = new();
 
-        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
         public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
@@ -75,11 +73,9 @@ namespace Syspharma.Domain.DTOs
 
         public string? Imagen { get; set; }
 
-        // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public bool EsMedicamento { get; set; } = false;
         public ProductoMedicamentoDto? Medicamento { get; set; }
 
-        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
         public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 
@@ -126,11 +122,9 @@ namespace Syspharma.Domain.DTOs
 
         public string? Imagen { get; set; }
 
-        // --- NUEVAS PROPIEDADES DE MEDICAMENTO ---
         public bool EsMedicamento { get; set; } = false;
         public ProductoMedicamentoDto? Medicamento { get; set; }
 
-        // --- FORMAS DE VENTA (Unidad/Blister/Caja) ---
         public List<ProductoFormaVentaDto> FormasVenta { get; set; } = new();
     }
 

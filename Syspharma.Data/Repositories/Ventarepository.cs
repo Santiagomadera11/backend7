@@ -30,11 +30,6 @@ namespace Syspharma.Data.Repositories
             _context = context;
         }
 
-        // Costo real de un renglón de venta: si el stock salió de uno o varios lotes
-        // (VentaDetalleLote), se usa el promedio ponderado de sus CostoUnitario reales;
-        // si quedó asociado a un único LoteId (formato previo), se usa el costo de ese
-        // lote; si no hay ningún lote vinculado, se cae al PrecioCompra actual del
-        // producto porque es la única referencia de costo disponible para ese caso.
         private static decimal CalcularCostoUnitario(VentaDetalle d)
         {
             if (d.Lotes != null && d.Lotes.Count > 0)
@@ -149,10 +144,6 @@ namespace Syspharma.Data.Repositories
                 _context.Ventas.Add(venta);
                 await _context.SaveChangesAsync();
 
-                // El número definitivo se basa en el Id ya asignado por la BD, así queda
-                // corto y legible (VTA-00042) en vez del timestamp crudo de antes
-                // (20260917143557), que no se podía ni leer. Se persiste con el
-                // SaveChangesAsync de más abajo, no hace falta uno aparte.
                 venta.NumeroVenta = $"VTA-{venta.Id:D5}";
 
                 if (dto.Detalles != null)
@@ -171,7 +162,6 @@ namespace Syspharma.Data.Repositories
                         }
                         else
                         {
-                            // Fallback FEFO automático si el producto tiene lotes activos
                             var activeLotes = await _context.Lotes
                                 .Where(l => l.ProductoId == d.ProductoId && l.FechaVencimiento >= DateOnly.FromDateTime(DateTime.Today) && l.Cantidad > 0)
                                 .OrderBy(l => l.FechaVencimiento)
@@ -188,7 +178,7 @@ namespace Syspharma.Data.Repositories
                                     pendingToDiscount -= toDiscount;
                                     if (!assignedLoteId.HasValue)
                                     {
-                                        assignedLoteId = lote.Id; // Asociar al menos el primer lote modificado
+                                        assignedLoteId = lote.Id;
                                     }
                                 }
                             }
@@ -223,7 +213,6 @@ namespace Syspharma.Data.Repositories
                             CitaId = s.CitaId
                         });
 
-                        // Mark Cita as Pagada
                         if (s.CitaId.HasValue && s.CitaId.Value > 0)
                         {
                             var cita = await _context.Citas.FindAsync(s.CitaId.Value);
@@ -291,7 +280,6 @@ namespace Syspharma.Data.Repositories
                     .FirstOrDefaultAsync(v => v.Id == id);
                 if (venta == null) return false;
 
-                // Revertir stock
                 foreach (var d in venta.VentaDetalles)
                 {
                     if (d.LoteId.HasValue)
@@ -306,7 +294,6 @@ namespace Syspharma.Data.Repositories
                     if (p != null) p.Stock += d.Cantidad;
                 }
 
-                // Revertir turno
                 var turno = await _context.Turnos.FindAsync(venta.TurnoId);
                 if (turno != null)
                 {
@@ -314,7 +301,7 @@ namespace Syspharma.Data.Repositories
                     turno.ResumenVentas -= 1;
                 }
 
-                venta.EstadoId = 3; // anulada
+                venta.EstadoId = 3;
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return true;

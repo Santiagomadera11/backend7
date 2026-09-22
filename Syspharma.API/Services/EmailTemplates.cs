@@ -2,9 +2,6 @@ namespace Syspharma.API.Services
 {
 	public static class EmailTemplates
 	{
-		// =====================================================
-		// RECUPERACIÓN DE CONTRASEÑA — Mejorado
-		// =====================================================
 		public static string RecuperacionContrasena(string nombre, string codigo) => $@"
 <!DOCTYPE html>
 <html lang='es'>

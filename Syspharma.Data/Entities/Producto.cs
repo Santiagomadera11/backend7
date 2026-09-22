@@ -51,7 +51,6 @@ public partial class Producto
 
     public virtual ICollection<VentaDetalle> VentaDetalles { get; set; } = new List<VentaDetalle>();
 
-    // --- NUEVA RELACIÓN HACIA MEDICAMENTO ---
     public virtual ProductoMedicamento? ProductoMedicamento { get; set; }
 
     public virtual ICollection<Lote> Lotes { get; set; } = new List<Lote>();

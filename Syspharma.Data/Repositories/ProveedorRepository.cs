@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Syspharma.Data.Context;
 using Syspharma.Data.Entities;
 using Syspharma.Domain.DTOs;
@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace Syspharma.Data.Repositories
 {
-    // INTERFAZ INCLUIDA
     public interface IProveedorRepository
     {
         Task<List<ProveedorDto>> ObtenerTodos();
