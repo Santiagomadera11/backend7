@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Syspharma.Data.Context;
 
 #nullable disable
@@ -17,37 +17,36 @@ namespace Syspharma.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "9.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                        .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
                 });
@@ -56,18 +55,18 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -80,18 +79,18 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -103,16 +102,16 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -124,10 +123,10 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -139,16 +138,16 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -159,31 +158,31 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("descripcion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -199,31 +198,31 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("descripcion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -239,13 +238,13 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("EstadoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("estadoId");
 
                     b.Property<DateOnly>("Fecha")
@@ -254,41 +253,41 @@ namespace Syspharma.Data.Migrations
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<TimeOnly>("Hora")
-                        .HasColumnType("time")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("hora");
 
                     b.Property<int>("MedicoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("medicoId");
 
                     b.Property<string>("Notas")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("notas");
 
                     b.Property<string>("PacienteDocumento")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("pacienteDocumento");
 
                     b.Property<string>("PacienteEmail")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("pacienteEmail");
 
                     b.Property<string>("PacienteNombre")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("pacienteNombre");
 
                     b.Property<string>("PacienteTelefono")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("pacienteTelefono");
 
                     b.Property<decimal?>("Precio")
@@ -296,20 +295,20 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precio");
 
                     b.Property<int?>("ServicioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("servicioId");
 
                     b.Property<string>("ServicioNombre")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("servicioNombre");
 
                     b.Property<int?>("UsuarioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioId");
 
                     b.Property<int?>("VentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("ventaId");
 
                     b.HasKey("Id")
@@ -333,23 +332,23 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("EstadoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("estadoId");
 
                     b.Property<DateTime?>("FechaCompra")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCompra")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTime?>("FechaEntrega")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaEntrega");
 
                     b.Property<decimal>("Iva")
@@ -357,21 +356,21 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("iva");
 
                     b.Property<string>("Notas")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("notas");
 
                     b.Property<string>("NumeroCompra")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("numeroCompra");
 
                     b.Property<string>("Observaciones")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("observaciones");
 
                     b.Property<int>("ProveedorId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("proveedorId");
 
                     b.Property<decimal>("Subtotal")
@@ -383,7 +382,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("total");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioId");
 
                     b.HasKey("Id")
@@ -405,17 +404,17 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<int>("CompraId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("compraId");
 
                     b.Property<DateOnly?>("FechaVencimiento")
@@ -424,7 +423,7 @@ namespace Syspharma.Data.Migrations
 
                     b.Property<string>("Lote")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("lote");
 
                     b.Property<decimal>("PrecioUnitario")
@@ -432,7 +431,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precioUnitario");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.Property<decimal>("Subtotal")
@@ -453,32 +452,32 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Clave")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("clave");
 
                     b.Property<string>("Descripcion")
                         .HasMaxLength(300)
-                        .HasColumnType("nvarchar(300)")
+                        .HasColumnType("character varying(300)")
                         .HasColumnName("descripcion");
 
                     b.Property<DateTime?>("FechaActualizacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaActualizacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Valor")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("valor");
 
                     b.HasKey("Id");
@@ -493,21 +492,21 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CantidadDevuelta")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidadDevuelta");
 
                     b.Property<int>("DetalleVentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("detalleVentaId");
 
                     b.Property<int>("DevolucionId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("devolucionId");
 
                     b.Property<decimal>("PrecioUnitario")
@@ -515,12 +514,12 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precioUnitario");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.Property<bool>("Reingresa")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("reingresa");
 
@@ -544,20 +543,20 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<int>("DetalleDevolucionId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("detalleDevolucionId");
 
                     b.Property<int>("LoteId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("loteId");
 
                     b.HasKey("Id");
@@ -573,36 +572,36 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("EstadoId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasDefaultValue(1)
                         .HasColumnName("estadoId");
 
                     b.Property<DateTime>("FechaDevolucion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaDevolucion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTime?>("FechaGestion")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaGestion");
 
                     b.Property<string>("Motivo")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("motivo");
 
                     b.Property<string>("Observaciones")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("observaciones");
 
                     b.Property<decimal>("TotalDevolucion")
@@ -610,15 +609,15 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("totalDevolucion");
 
                     b.Property<int?>("UsuarioGestionId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioGestionId");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioId");
 
                     b.Property<int>("VentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("ventaId");
 
                     b.HasKey("Id")
@@ -637,10 +636,10 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("FechaFin")
                         .HasColumnType("date")
@@ -651,12 +650,12 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("fechaInicio");
 
                     b.Property<int>("MedicoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("medicoId");
 
                     b.Property<string>("Motivo")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("motivo");
 
                     b.HasKey("Id");
@@ -670,41 +669,41 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DiaSemana")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("diaSemana");
 
                     b.Property<string>("MananaFin")
                         .IsRequired()
                         .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)")
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("mananaFin");
 
                     b.Property<string>("MananaInicio")
                         .IsRequired()
                         .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)")
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("mananaInicio");
 
                     b.Property<int>("MedicoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("medicoId");
 
                     b.Property<string>("TardeFin")
                         .IsRequired()
                         .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)")
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("tardeFin");
 
                     b.Property<string>("TardeInicio")
                         .IsRequired()
                         .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)")
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("tardeInicio");
 
                     b.HasKey("Id");
@@ -718,21 +717,21 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("activo");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -745,15 +744,15 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -769,15 +768,15 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -793,15 +792,15 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -817,15 +816,15 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -841,14 +840,14 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Anulado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("anulado");
 
@@ -856,34 +855,34 @@ namespace Syspharma.Data.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasDefaultValue("operacional")
                         .HasColumnName("categoria");
 
                     b.Property<string>("Comprobante")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("comprobante");
 
                     b.Property<string>("Concepto")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("concepto");
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("descripcion");
 
                     b.Property<DateTime?>("FechaAnulacion")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaAnulacion");
 
                     b.Property<DateTime?>("FechaGasto")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaGasto")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<decimal>("Monto")
                         .HasColumnType("decimal(12, 2)")
@@ -891,15 +890,15 @@ namespace Syspharma.Data.Migrations
 
                     b.Property<string>("MotivoAnulacion")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("motivoAnulacion");
 
                     b.Property<int>("TurnoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("turnoId");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioId");
 
                     b.HasKey("Id")
@@ -916,17 +915,17 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<int?>("CompraId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("compraId");
 
                     b.Property<decimal>("CostoUnitario")
@@ -935,9 +934,9 @@ namespace Syspharma.Data.Migrations
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateOnly>("FechaVencimiento")
                         .HasColumnType("date")
@@ -946,11 +945,11 @@ namespace Syspharma.Data.Migrations
                     b.Property<string>("NumeroLote")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("numeroLote");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.HasKey("Id")
@@ -967,32 +966,32 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descripcion")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("descripcion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id");
@@ -1007,66 +1006,66 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DiasLaborales")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("diasLaborales");
 
                     b.Property<string>("Documento")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("documento");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("email");
 
                     b.Property<string>("Especialidad")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("especialidad");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<TimeOnly?>("HoraFin")
-                        .HasColumnType("time")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("horaFin");
 
                     b.Property<TimeOnly?>("HoraInicio")
-                        .HasColumnType("time")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("horaInicio");
 
                     b.Property<int?>("Intervalo")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasDefaultValue(30)
                         .HasColumnName("intervalo");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("nombre");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("telefono");
 
                     b.HasKey("Id")
@@ -1079,9 +1078,9 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("FechaFin")
                         .HasColumnType("date");
@@ -1090,10 +1089,10 @@ namespace Syspharma.Data.Migrations
                         .HasColumnType("date");
 
                     b.Property<int>("MedicoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Motivo")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1106,27 +1105,27 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<byte>("DiaSemana")
-                        .HasColumnType("tinyint");
+                        .HasColumnType("smallint");
 
                     b.Property<TimeOnly?>("MananaFin")
-                        .HasColumnType("time");
+                        .HasColumnType("time without time zone");
 
                     b.Property<TimeOnly?>("MananaInicio")
-                        .HasColumnType("time");
+                        .HasColumnType("time without time zone");
 
                     b.Property<int>("MedicoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<TimeOnly?>("TardeFin")
-                        .HasColumnType("time");
+                        .HasColumnType("time without time zone");
 
                     b.Property<TimeOnly?>("TardeInicio")
-                        .HasColumnType("time");
+                        .HasColumnType("time without time zone");
 
                     b.HasKey("Id");
 
@@ -1140,27 +1139,27 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -1176,26 +1175,26 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Categoria")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Codigo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("FechaCreacion")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1206,32 +1205,32 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descripcion")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("descripcion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id");
@@ -1246,52 +1245,52 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoriaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("categoriaId");
 
                     b.Property<string>("CodigoBarras")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("codigoBarras");
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("descripcion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateOnly?>("FechaVencimientoProxima")
                         .HasColumnType("date")
                         .HasColumnName("fechaVencimientoProxima");
 
                     b.Property<string>("Imagen")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("imagen");
 
                     b.Property<int?>("MarcaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("marcaId");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("nombre");
 
                     b.Property<decimal>("PorcentajeIva")
@@ -1309,22 +1308,22 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precioCompra");
 
                     b.Property<int?>("PresentacionId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("presentacionId");
 
                     b.Property<int?>("ProveedorId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("proveedorId");
 
                     b.Property<int>("Stock")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("stock");
 
                     b.Property<DateTime?>("UltimaActualizacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("ultimaActualizacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.HasKey("Id")
                         .HasName("PK__producto__3213E83F11CBC83A");
@@ -1346,19 +1345,19 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("activo");
 
                     b.Property<int>("FactorUnidades")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("factorUnidades");
 
                     b.Property<decimal>("Precio")
@@ -1366,13 +1365,13 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precio");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tipo");
 
                     b.HasKey("Id")
@@ -1389,63 +1388,63 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool?>("AfectaConduccion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("afectaConduccion");
 
                     b.Property<string>("Composicion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("composicion");
 
                     b.Property<string>("Concentracion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("concentracion");
 
                     b.Property<bool?>("Fotosensible")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("fotosensible");
 
                     b.Property<string>("Indicaciones")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("indicaciones");
 
                     b.Property<string>("Posologia")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("posologia");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.Property<string>("RegistroSanitario")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("registroSanitario");
 
                     b.Property<bool?>("RequiereFormula")
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasColumnName("requiereFormula");
 
                     b.Property<bool?>("RequiereRefrigeracion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("requiereRefrigeracion");
 
                     b.Property<int?>("UnidadesPorEnvase")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("unidadesPorEnvase");
 
                     b.Property<string>("ViaAdministracion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("viaAdministracion");
 
                     b.HasKey("Id")
@@ -1461,53 +1460,53 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Contacto")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("contacto");
 
                     b.Property<string>("Direccion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("direccion");
 
                     b.Property<string>("Documento")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("documento");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("email");
 
                     b.Property<int?>("EstadoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("estadoId");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("nombre");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("telefono");
 
                     b.Property<int?>("TipoDocumentoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("tipoDocumentoId");
 
                     b.HasKey("Id")
@@ -1527,31 +1526,31 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("descripcion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -1567,23 +1566,23 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("FechaAsignacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaAsignacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<int>("PermisoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("permisoId");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("roleId");
 
                     b.HasKey("Id")
@@ -1601,39 +1600,39 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CategoriaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("categoriaId");
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("descripcion");
 
                     b.Property<int?>("Duracion")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("duracion");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("nombre");
 
                     b.Property<decimal>("Precio")
@@ -1654,27 +1653,27 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("nombre");
 
                     b.HasKey("Id")
@@ -1690,10 +1689,10 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("Diferencia")
                         .HasColumnType("decimal(12, 2)")
@@ -1703,18 +1702,18 @@ namespace Syspharma.Data.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasDefaultValue("activo")
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaApertura")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaApertura")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTime?>("FechaCierre")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCierre");
 
                     b.Property<decimal>("MontoBase")
@@ -1726,7 +1725,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("montoFinal");
 
                     b.Property<string>("Notas")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("notas");
 
                     b.Property<decimal>("ResumenErroresCaja")
@@ -1734,11 +1733,11 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("resumenErroresCaja");
 
                     b.Property<int>("ResumenServicios")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("resumenServicios");
 
                     b.Property<int>("ResumenVentas")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("resumenVentas");
 
                     b.Property<decimal>("TotalGastos")
@@ -1750,7 +1749,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("totalVentas");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioId");
 
                     b.HasKey("Id")
@@ -1765,105 +1764,105 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("avatar");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Direccion")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Documento")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("documento");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("email");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("Estado")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaCreacion")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCreacion")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("nombre");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("roleId");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("telefono");
 
                     b.Property<int?>("TipoDocumentoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("tipoDocumentoId");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("UltimoAcceso")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("ultimoAcceso");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -1872,8 +1871,7 @@ namespace Syspharma.Data.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                        .HasDatabaseName("UserNameIndex");
 
                     b.HasIndex("RoleId");
 
@@ -1885,15 +1883,15 @@ namespace Syspharma.Data.Migrations
             modelBuilder.Entity("Syspharma.Data.Entities.VCompraDetalle", b =>
                 {
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<int>("CompraId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("compraId");
 
                     b.Property<int>("Id")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
                     b.Property<decimal>("PrecioUnitario")
@@ -1901,13 +1899,13 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precioUnitario");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.Property<string>("ProductoNombre")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("productoNombre");
 
                     b.Property<decimal>("Subtotal")
@@ -1928,25 +1926,25 @@ namespace Syspharma.Data.Migrations
                     b.Property<string>("Empleado")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("empleado");
 
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("estado");
 
                     b.Property<DateTime?>("FechaApertura")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaApertura");
 
                     b.Property<DateTime?>("FechaCierre")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaCierre");
 
                     b.Property<int>("Id")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
                     b.Property<decimal>("MontoBase")
@@ -1970,12 +1968,12 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("Cantidad");
 
                     b.Property<decimal>("Descuento")
@@ -1987,12 +1985,12 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("PrecioUnitario");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("ProductoId");
 
                     b.Property<string>("ProductoNombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("ProductoNombre");
 
                     b.Property<decimal>("Subtotal")
@@ -2004,7 +2002,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("SubtotalCalculado");
 
                     b.Property<int>("VentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("VentaId");
 
                     b.HasKey("Id");
@@ -2016,58 +2014,58 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClienteDocumento")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("clienteDocumento");
 
                     b.Property<string>("ClienteNombre")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("clienteNombre");
 
                     b.Property<string>("ClienteTelefono")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("clienteTelefono");
 
                     b.Property<int>("EstadoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("estadoId");
 
                     b.Property<DateTime?>("FechaVenta")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp")
                         .HasColumnName("fechaVenta")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasDefaultValueSql("now()");
 
                     b.Property<decimal>("Iva")
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("iva");
 
                     b.Property<int>("MetodoPagoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("metodoPagoId");
 
                     b.Property<string>("Notas")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("notas");
 
                     b.Property<string>("NumeroVenta")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("numeroVenta");
 
                     b.Property<string>("Origen")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasDefaultValue("CAJA")
                         .HasColumnName("origen");
 
@@ -2077,7 +2075,7 @@ namespace Syspharma.Data.Migrations
 
                     b.Property<string>("ReferenciasPago")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("referenciasPago");
 
                     b.Property<decimal>("Subtotal")
@@ -2089,11 +2087,11 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("total");
 
                     b.Property<int?>("TurnoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("turnoId");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usuarioId");
 
                     b.HasKey("Id")
@@ -2118,13 +2116,13 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<decimal>("Descuento")
@@ -2133,21 +2131,21 @@ namespace Syspharma.Data.Migrations
 
                     b.Property<int>("FactorUnidades")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasDefaultValue(1)
                         .HasColumnName("factorUnidades");
 
                     b.Property<int?>("FormaVentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("formaVentaId");
 
                     b.Property<string>("FormaVentaTipo")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("formaVentaTipo");
 
                     b.Property<int?>("LoteId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("loteId");
 
                     b.Property<decimal>("PrecioUnitario")
@@ -2155,7 +2153,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precioUnitario");
 
                     b.Property<int>("ProductoId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("productoId");
 
                     b.Property<decimal>("Subtotal")
@@ -2163,7 +2161,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("subtotal");
 
                     b.Property<int>("VentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("ventaId");
 
                     b.HasKey("Id")
@@ -2184,20 +2182,20 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<int>("LoteId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("loteId");
 
                     b.Property<int>("VentaDetalleId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("ventaDetalleId");
 
                     b.HasKey("Id");
@@ -2213,17 +2211,17 @@ namespace Syspharma.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Cantidad")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("cantidad");
 
                     b.Property<int?>("CitaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("citaId");
 
                     b.Property<decimal>("Descuento")
@@ -2235,7 +2233,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("precioUnitario");
 
                     b.Property<int>("ServicioId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("servicioId");
 
                     b.Property<decimal>("Subtotal")
@@ -2243,7 +2241,7 @@ namespace Syspharma.Data.Migrations
                         .HasColumnName("subtotal");
 
                     b.Property<int>("VentaId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("ventaId");
 
                     b.HasKey("Id")

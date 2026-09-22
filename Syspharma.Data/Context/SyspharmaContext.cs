@@ -75,7 +75,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(100).HasColumnName("nombre");
         });
 
@@ -87,7 +87,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(100).HasColumnName("nombre");
         });
 
@@ -99,7 +99,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.EstadoId).HasColumnName("estadoId");
             entity.Property(e => e.Fecha).HasColumnName("fecha");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Hora).HasColumnName("hora");
             entity.Property(e => e.MedicoId).HasColumnName("medicoId");
             entity.Property(e => e.Notas).HasColumnName("notas");
@@ -127,8 +127,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.HasIndex(e => e.ProveedorId, "idx_compras_proveedor");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.EstadoId).HasColumnName("estadoId");
-            entity.Property(e => e.FechaCompra).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCompra");
-            entity.Property(e => e.FechaEntrega).HasColumnType("datetime").HasColumnName("fechaEntrega");
+            entity.Property(e => e.FechaCompra).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCompra");
+            entity.Property(e => e.FechaEntrega).HasColumnType("timestamp").HasColumnName("fechaEntrega");
             entity.Property(e => e.Iva).HasColumnType("decimal(12, 2)").HasColumnName("iva");
             entity.Property(e => e.Notas).HasColumnName("notas");
             entity.Property(e => e.NumeroCompra).HasMaxLength(50).HasColumnName("numeroCompra");
@@ -203,12 +203,12 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Comprobante).HasMaxLength(100).HasColumnName("comprobante");
             entity.Property(e => e.Concepto).HasMaxLength(200).HasColumnName("concepto");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
-            entity.Property(e => e.FechaGasto).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaGasto");
+            entity.Property(e => e.FechaGasto).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaGasto");
             entity.Property(e => e.Monto).HasColumnType("decimal(12, 2)").HasColumnName("monto");
             entity.Property(e => e.TurnoId).HasColumnName("turnoId");
             entity.Property(e => e.UsuarioId).HasColumnName("usuarioId");
             entity.Property(e => e.Anulado).HasDefaultValue(false).HasColumnName("anulado");
-            entity.Property(e => e.FechaAnulacion).HasColumnType("datetime").HasColumnName("fechaAnulacion");
+            entity.Property(e => e.FechaAnulacion).HasColumnType("timestamp").HasColumnName("fechaAnulacion");
             entity.Property(e => e.MotivoAnulacion).HasMaxLength(255).HasColumnName("motivoAnulacion");
             entity.HasOne(d => d.Turno).WithMany(p => p.Gastos).HasForeignKey(d => d.TurnoId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Gastos_Turnos");
             entity.HasOne(d => d.Usuario).WithMany(p => p.Gastos).HasForeignKey(d => d.UsuarioId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Gastos_Usuarios");
@@ -250,7 +250,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Email).HasMaxLength(100).HasColumnName("email");
             entity.Property(e => e.Especialidad).HasMaxLength(100).HasColumnName("especialidad");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.HoraFin).HasColumnName("horaFin");
             entity.Property(e => e.HoraInicio).HasColumnName("horaInicio");
             entity.Property(e => e.Intervalo).HasDefaultValue(30).HasColumnName("intervalo");
@@ -286,7 +286,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.HasIndex(e => e.Nombre, "UQ__metodos___72AFBCC64CAE685E").IsUnique();
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("nombre");
         });
 
@@ -307,8 +307,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
                 .HasColumnName("categoria");
             entity.Property(e => e.Comprobante).HasMaxLength(100).HasColumnName("comprobante");
             entity.Property(e => e.FechaGasto)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
+                .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp")
                 .HasColumnName("fechaGasto");
 
             entity.HasOne(d => d.Turno)
@@ -335,7 +335,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.CodigoBarras).HasMaxLength(100).HasColumnName("codigoBarras");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Imagen).HasColumnName("imagen");
             entity.Property(e => e.Nombre).HasMaxLength(200).HasColumnName("nombre");
             entity.Property(e => e.Precio).HasColumnType("decimal(12, 2)").HasColumnName("precio");
@@ -344,7 +344,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.PresentacionId).HasColumnName("presentacionId");
             entity.Property(e => e.ProveedorId).HasColumnName("proveedorId");
             entity.Property(e => e.Stock).HasColumnName("stock");
-            entity.Property(e => e.UltimaActualizacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("ultimaActualizacion");
+            entity.Property(e => e.UltimaActualizacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("ultimaActualizacion");
             entity.Property(e => e.FechaVencimientoProxima).HasColumnName("fechaVencimientoProxima");
             entity.Property(e => e.PorcentajeIva).HasColumnType("decimal(5, 2)").HasDefaultValue(0.00m).HasColumnName("porcentajeIva");
             entity.HasOne(d => d.Categoria).WithMany(p => p.Productos).HasForeignKey(d => d.CategoriaId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Productos_Categorias");
@@ -362,7 +362,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Nombre).HasMaxLength(100).HasColumnName("nombre");
             entity.Property(e => e.Descripcion).HasMaxLength(500).HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
         });
 
         modelBuilder.Entity<Presentacion>(entity =>
@@ -374,7 +374,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Nombre).HasMaxLength(100).HasColumnName("nombre");
             entity.Property(e => e.Descripcion).HasMaxLength(500).HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
         });
 
         modelBuilder.Entity<Proveedore>(entity =>
@@ -388,7 +388,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Documento).HasMaxLength(50).HasColumnName("documento");
             entity.Property(e => e.Email).HasMaxLength(100).HasColumnName("email");
             entity.Property(e => e.EstadoId).HasColumnName("estadoId");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(150).HasColumnName("nombre");
             entity.Property(e => e.Telefono).HasMaxLength(20).HasColumnName("telefono");
             entity.Property(e => e.TipoDocumentoId).HasColumnName("tipoDocumentoId");
@@ -404,7 +404,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("nombre");
         });
 
@@ -414,7 +414,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.ToTable("roles_permisos");
             entity.HasIndex(e => new { e.RoleId, e.PermisoId }, "UQ_Role_Permiso").IsUnique();
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.FechaAsignacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaAsignacion");
+            entity.Property(e => e.FechaAsignacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaAsignacion");
             entity.Property(e => e.PermisoId).HasColumnName("permisoId");
             entity.Property(e => e.RoleId).HasColumnName("roleId");
             entity.HasOne(d => d.Permiso).WithMany(p => p.RolesPermisos).HasForeignKey(d => d.PermisoId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_RolesPermisos_Permisos");
@@ -432,7 +432,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Descripcion).HasColumnName("descripcion");
             entity.Property(e => e.Duracion).HasColumnName("duracion");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(150).HasColumnName("nombre");
             entity.Property(e => e.Precio).HasColumnType("decimal(12, 2)").HasColumnName("precio");
             entity.HasOne(d => d.Categoria).WithMany(p => p.Servicios).HasForeignKey(d => d.CategoriaId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Servicios_Categoria");
@@ -445,7 +445,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.HasIndex(e => e.Nombre, "UQ__tipos_do__72AFBCC640703EE9").IsUnique();
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(50).HasColumnName("nombre");
         });
 
@@ -456,8 +456,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Diferencia).HasColumnType("decimal(12, 2)").HasColumnName("diferencia");
             entity.Property(e => e.Estado).HasMaxLength(20).HasDefaultValue("activo").HasColumnName("estado");
-            entity.Property(e => e.FechaApertura).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaApertura");
-            entity.Property(e => e.FechaCierre).HasColumnType("datetime").HasColumnName("fechaCierre");
+            entity.Property(e => e.FechaApertura).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaApertura");
+            entity.Property(e => e.FechaCierre).HasColumnType("timestamp").HasColumnName("fechaCierre");
             entity.Property(e => e.MontoBase).HasColumnType("decimal(12, 2)").HasColumnName("montoBase");
             entity.Property(e => e.MontoFinal).HasColumnType("decimal(12, 2)").HasColumnName("montoFinal");
             entity.Property(e => e.Notas).HasColumnName("notas");
@@ -478,14 +478,14 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Documento).HasMaxLength(20).HasColumnName("documento");
             entity.Property(e => e.Email).HasMaxLength(100).HasColumnName("email");
             entity.Property(e => e.Estado).HasDefaultValue(true).HasColumnName("estado");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
             entity.Property(e => e.Nombre).HasMaxLength(150).HasColumnName("nombre");
             entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
             entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
             entity.Property(e => e.RoleId).HasColumnName("roleId");
             entity.Property(e => e.Telefono).HasMaxLength(20).HasColumnName("telefono");
             entity.Property(e => e.TipoDocumentoId).HasColumnName("tipoDocumentoId");
-            entity.Property(e => e.UltimoAcceso).HasColumnType("datetime").HasColumnName("ultimoAcceso");
+            entity.Property(e => e.UltimoAcceso).HasColumnType("timestamp").HasColumnName("ultimoAcceso");
             entity.Property(e => e.UserName).HasMaxLength(256);
             entity.HasOne(d => d.Role).WithMany(p => p.Usuarios).HasForeignKey(d => d.RoleId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Usuarios_Roles");
             entity.HasOne(d => d.TipoDocumento).WithMany(p => p.Usuarios).HasForeignKey(d => d.TipoDocumentoId).OnDelete(DeleteBehavior.SetNull).HasConstraintName("FK_Usuarios_TipoDocumento");
@@ -509,8 +509,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.HasNoKey().ToView("v_resumen_turnos");
             entity.Property(e => e.Empleado).HasMaxLength(150).HasColumnName("empleado");
             entity.Property(e => e.Estado).HasMaxLength(20).HasColumnName("estado");
-            entity.Property(e => e.FechaApertura).HasColumnType("datetime").HasColumnName("fechaApertura");
-            entity.Property(e => e.FechaCierre).HasColumnType("datetime").HasColumnName("fechaCierre");
+            entity.Property(e => e.FechaApertura).HasColumnType("timestamp").HasColumnName("fechaApertura");
+            entity.Property(e => e.FechaCierre).HasColumnType("timestamp").HasColumnName("fechaCierre");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.MontoBase).HasColumnType("decimal(12, 2)").HasColumnName("montoBase");
             entity.Property(e => e.TotalGastos).HasColumnType("decimal(38, 2)").HasColumnName("totalGastos");
@@ -542,7 +542,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.ClienteNombre).HasMaxLength(150).HasColumnName("clienteNombre");
             entity.Property(e => e.ClienteTelefono).HasMaxLength(20).HasColumnName("clienteTelefono");
             entity.Property(e => e.EstadoId).HasColumnName("estadoId");
-            entity.Property(e => e.FechaVenta).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaVenta");
+            entity.Property(e => e.FechaVenta).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaVenta");
             entity.Property(e => e.Iva).HasColumnType("decimal(12, 2)").HasColumnName("iva");
             entity.Property(e => e.MetodoPagoId).HasColumnName("metodoPagoId");
             entity.Property(e => e.Notas).HasColumnName("notas");
@@ -648,7 +648,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
 
             entity.Property(e => e.RequiereFormula)
                 .HasColumnName("requiereFormula")
-                .HasColumnType("bit");
+                .HasColumnType("boolean");
 
             entity.Property(e => e.Indicaciones).HasColumnName("indicaciones");
             entity.Property(e => e.Posologia).HasColumnName("posologia");
@@ -656,17 +656,17 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
 
             entity.Property(e => e.RequiereRefrigeracion)
                 .HasColumnName("requiereRefrigeracion")
-                .HasColumnType("bit")
+                .HasColumnType("boolean")
                 .HasDefaultValue(false);
 
             entity.Property(e => e.AfectaConduccion)
                 .HasColumnName("afectaConduccion")
-                .HasColumnType("bit")
+                .HasColumnType("boolean")
                 .HasDefaultValue(false);
 
             entity.Property(e => e.Fotosensible)
                 .HasColumnName("fotosensible")
-                .HasColumnType("bit")
+                .HasColumnType("boolean")
                 .HasDefaultValue(false);
 
             entity.HasOne(d => d.Producto)
@@ -686,7 +686,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Tipo).HasMaxLength(20).HasColumnName("tipo");
             entity.Property(e => e.Precio).HasColumnType("decimal(12, 2)").HasColumnName("precio");
             entity.Property(e => e.FactorUnidades).HasColumnName("factorUnidades");
-            entity.Property(e => e.Activo).HasColumnType("bit").HasDefaultValue(true).HasColumnName("activo");
+            entity.Property(e => e.Activo).HasColumnType("boolean").HasDefaultValue(true).HasColumnName("activo");
 
             entity.HasIndex(e => new { e.ProductoId, e.Tipo }).IsUnique().HasDatabaseName("UQ_producto_forma_venta_producto_tipo");
 
@@ -709,7 +709,7 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Cantidad).HasColumnName("cantidad");
             entity.Property(e => e.FechaVencimiento).HasColumnName("fechaVencimiento");
             entity.Property(e => e.CostoUnitario).HasColumnType("decimal(12, 2)").HasColumnName("costoUnitario");
-            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaCreacion");
 
             entity.HasOne(d => d.Producto)
                 .WithMany(p => p.Lotes)
@@ -745,8 +745,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Motivo).HasMaxLength(255).HasColumnName("motivo");
             entity.Property(e => e.Observaciones).HasMaxLength(500).HasColumnName("observaciones");
             entity.Property(e => e.TotalDevolucion).HasColumnType("decimal(18, 2)").HasColumnName("totalDevolucion");
-            entity.Property(e => e.FechaDevolucion).HasDefaultValueSql("(getdate())").HasColumnType("datetime").HasColumnName("fechaDevolucion");
-            entity.Property(e => e.FechaGestion).HasColumnType("datetime").HasColumnName("fechaGestion");
+            entity.Property(e => e.FechaDevolucion).HasDefaultValueSql("now()").HasColumnType("timestamp").HasColumnName("fechaDevolucion");
+            entity.Property(e => e.FechaGestion).HasColumnType("timestamp").HasColumnName("fechaGestion");
             entity.Property(e => e.UsuarioGestionId).HasColumnName("usuarioGestionId");
 
             entity.HasOne(d => d.Venta)
@@ -811,8 +811,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Valor).HasMaxLength(500).HasColumnName("valor");
             entity.Property(e => e.Descripcion).HasMaxLength(300).HasColumnName("descripcion");
             entity.Property(e => e.FechaActualizacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
+                .HasDefaultValueSql("now()")
+                .HasColumnType("timestamp")
                 .HasColumnName("fechaActualizacion");
         });
 
@@ -827,8 +827,8 @@ public partial class SyspharmaContext : IdentityDbContext<Usuario, IdentityRole<
             entity.Property(e => e.Motivo).HasMaxLength(500).HasColumnName("motivo");
             entity.Property(e => e.Observaciones).HasColumnName("observaciones");
             entity.Property(e => e.TotalDevolucion).HasColumnType("decimal(12,2)").HasColumnName("totalDevolucion");
-            entity.Property(e => e.FechaDevolucion).HasColumnType("datetime").HasColumnName("fechaDevolucion");
-            entity.Property(e => e.FechaGestion).HasColumnType("datetime").HasColumnName("fechaGestion");
+            entity.Property(e => e.FechaDevolucion).HasColumnType("timestamp").HasColumnName("fechaDevolucion");
+            entity.Property(e => e.FechaGestion).HasColumnType("timestamp").HasColumnName("fechaGestion");
             entity.Property(e => e.UsuarioGestionId).HasColumnName("usuarioGestionId");
             entity.HasOne(d => d.Venta).WithMany().HasForeignKey(d => d.VentaId).OnDelete(DeleteBehavior.ClientSetNull);
             entity.HasOne(d => d.Usuario).WithMany().HasForeignKey(d => d.UsuarioId).OnDelete(DeleteBehavior.ClientSetNull);
